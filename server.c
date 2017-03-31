@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+#include "function.h"
 
 int main()
 {
+	server_function();
 	printf("socket() : 소켓을 연다\n");
 	printf("connect() : 클라이언트와 연결을 시킨다\n");
 	printf("send() : 클라이언트에게 값을 보낸다\n");
