@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "function.h"
 
 void server_function(){
 	printf("server_fucntion call\n");

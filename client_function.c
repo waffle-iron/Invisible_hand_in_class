@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "function.h"
 
 void client_function(){
 	printf("client_fucntion call\n");

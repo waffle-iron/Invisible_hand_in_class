@@ -2,6 +2,6 @@
 #define __FUNCTION_H
 
 void server_fucntion(void);
-void client_fucntion(voide);
+void client_fucntion(void);
 
 #endif
