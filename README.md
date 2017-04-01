@@ -1,5 +1,5 @@
 # Invisible_hand_in_class
-
+ 소프트웨어 개발 프로젝트 8조
 ## Development Environment
 * OS
   * Ubuntu 16.04.2 LTS
