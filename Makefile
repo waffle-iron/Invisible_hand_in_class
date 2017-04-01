@@ -18,13 +18,13 @@ server_function.o: server_function.c
 	$(CC) $(CFLAGS) -c server_function.c $(LIBS)
 
 client: $(CLIENT_OBJS)
-	$(CC) $(CFLAGS) -o client $(SERVER_OBJS) $(LIBS)
+	$(CC) $(CFLAGS) -o client $(CLIENT_OBJS) $(LIBS)
 
 client.o: client.c
 	$(CC) $(CFLAGS) -c client.c $(LIBS)
 
 client_function.o: client_function.c
-	$(CC) $(CFLAGS) -c server_function.c $(LIBS)
+	$(CC) $(CFLAGS) -c client_function.c $(LIBS)
 
 clean:
 	rm -f server client $(SERVER_OBJS) $(CLIENT_OBJS)

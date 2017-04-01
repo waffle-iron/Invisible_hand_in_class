@@ -16,5 +16,5 @@
 make          // 서버 + 클라이언트 
 make server   // 서버
 make client   // 클라이언트만 
-make clean    // exe파일,object파일 삭제 시
+make clean    // exe파일,object파일 삭제 시(push전에 수행후 올리기)
 ```
