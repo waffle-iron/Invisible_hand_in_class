@@ -1,7 +1,10 @@
-#ifndef __FUNCTION_H
-#define __FUNCTION_H
+#ifndef _FUNCTION_H_
+#define _FUNCTION_H_
 
-void server_fucntion(void);
-void client_fucntion(void);
+#include <stdio.h>
+#include <stdlib.h>
+
+void server_function(void);
+void client_function(void);
 
 #endif
