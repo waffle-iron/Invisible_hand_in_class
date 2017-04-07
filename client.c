@@ -4,20 +4,24 @@
 #include<string.h>
 #include "function.h"
 
-#define PORTNUM 9005
 int main(void){
 	
 
-	printf("socket():\n");
-	printf("connect():\n"); 
-	printf("send():\n");
-	printf("recv():\n");
-	printf("closesocket():");
 	client_function();
-	int sd, n;
+
+	int sd, n,i;
 	char buf[256];
 	struct sockaddr_in sin;
-  
+	FILE *fp;
+	
+	char filename[50];
+	gets(filename);
+	printf("%s \n",filename);
+
+	
+	//서버로 보낼때 체크 할거: 파일 용량, 파일 이름 
+	//서버로 할때 할거: 파일 나누기, 파일 시리얼 넘버.
+	//서버로 보내고 나서: 재전송 준비.
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
         	perror("socket");
 	        exit(1);
@@ -26,17 +30,16 @@ int main(void){
       	memset((char *)&sin, '\0', sizeof(sin));
       	sin.sin_family = AF_INET;
       	sin.sin_port = htons(PORTNUM);
-    	sin.sin_addr.s_addr = inet_addr("192.168.162.133");
-  
-      	strcpy(buf, "I am a client.");
+    	sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+		
+
       	if (sendto(sd, buf, strlen(buf)+1, 0,
                (struct sockaddr *)&sin, sizeof(sin)) == -1) {
         	perror("sendto");
         	exit(1);
 	}
 	n = recvfrom(sd, buf, 255, 0, NULL, NULL);
-     	buf[n] = '\0';
-      	printf("** From Server : %s\n", buf);
+     	
   
       	return 0;
 
