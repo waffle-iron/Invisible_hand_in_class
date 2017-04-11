@@ -22,7 +22,7 @@ int main()
 	printf("closesocket() : 소켓을 닫는다. \n");
 
 	char buf[256];
-	struct sockaddr_in sin;//, cli;
+	struct sockaddr_in sin, cli;
 	int sd;
 	socklen_t  clientlen;
 
@@ -43,36 +43,8 @@ int main()
 		exit(1);
 	}
 
-/*
-while (1) {
-    printf("\nUDP Server: waiting for connection...");
-    bytes_read = recvfrom(socket_fd, recv_data, 1023, 0,
-            (struct sockaddr *) &client_addr, &sin_size);
-
-    if (bytes_read > 0) {
-                // a connection has been established
-            recv_data[bytes_read] = '\0';
-                printf("\nUDP Server: received -> %s", recv_data);
-            pid = fork();
-
-            if (pid < 0) {
-                perror("UDP Server: ERROR while forking new process.\n");
-                exit(1);
-            }
-            // check if the process ID is zero
-            if (pid == 0) {
-                // we are now inside the new forked process
-                char result[50];
-                int len = sprintf(result, "%d", server_parse_command(recv_data));
-                len = sendto(socket_fd, result, len, 0,
-                (struct sockaddr *) &client_addr, sin_size);
-                close(socket_fd);
-                exit(0);
-            }
-    }
-}
-*/
 	int pid;
+
 	while (1) {
 		int bytes_read = (recvfrom(sd, buf, 255, 0,(struct sockaddr *)&sin, &clientlen));
 		if (bytes_read == -1) {
@@ -90,23 +62,20 @@ while (1) {
 
 			 pid = fork();
 
-			if (pid < 0) {
+			 if (pid < 0) {
             	perror("UDP Server: ERROR while forking new process.\n");
                 exit(1);
-    		}
+    	}
         	// check if the process ID is zero
 			if (pid == 0) {
-			// we are now inside the new forked process
-			//	char result[50];
-			//    int len = sprintf(result, "%d", server_parse_command(buf));
-			//	len = sendto(sd, buf, strlen(buf)+1, 0,(struct sockaddr *)&cli, sizeof(cli));
-			    //len = sendto(socket_fd, result, len, 0,(struct sockaddr *) &client_addr, sin_size);
-			//	if (len == -1) {
-			//		perror("sendto");
-			//		exit(1);
-			//	}
+						printf("** From Client : %s\n", buf);
+          	strcpy(buf, "Hello Client");
+          if ((sendto(sd, buf, strlen(buf)+1, 0,(struct sockaddr *)&cli, sizeof(cli))) == -1) {
+              perror("sendto");
+              exit(1);
+          }
 				close(sd);
-			    exit(0);
+			  exit(0);
 			}
 		}
 	}
