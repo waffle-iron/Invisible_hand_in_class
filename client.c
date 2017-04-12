@@ -23,6 +23,7 @@ int main(int argc, char** argv){
 
 	int sd, fd, n;
 	char buf[256];
+	const char* filename = argv[2];
 	struct sockaddr_in sin;
 	socklen_t add_len = sizeof(struct sockaddr);
 	
@@ -31,32 +32,39 @@ int main(int argc, char** argv){
     	perror("socket");
 	    exit(1);
 	}
-  	
+	
 	// init 
 	memset((char *)&sin, '\0', sizeof(sin));
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = inet_addr(argv[1]);
+    sin.sin_addr.s_addr = inet_addr("127.0.0.1");
     sin.sin_port = htons(PORTNUM);
 	
-	if(bind(sd, (struct sockaddr*)&sin, add_len) < 0){
-		perror("bind fail");
-		exit(1);
-	}
 	//file open 
-	fd = open(argv[2], O_RDONLY);
+	fd = open(filename, O_RDONLY);
 	if(fd == -1){
 		perror("file open fail");
 		exit(1);
 	}
+
+	if(sendto(sd, filename, strlen(filename)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("sendto filename");
+		exit(1);
+	}
 	//file 내용을 전송
-	while((n = read(fd, buf, 255)) > 0){	
+	while((n = read(fd, buf, 255)) > 0){
+		printf("%d\n", n);
     	if (sendto(sd, buf, n, 0,
                (struct sockaddr *)&sin, sizeof(sin)) == -1) {
       		perror("sendto");
       		exit(1);
 		}
 	}
-	//	n = recvfrom(sd, buf, 255, 0, NULL, NULL);
+	memset(buf,0, sizeof(buf));
+	sprintf(buf, "end of file");
+	if(sendto(sd, buf, strlen(buf)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("sendto filename");
+		exit(1);
+	}
 
 	 return 0;
 }
