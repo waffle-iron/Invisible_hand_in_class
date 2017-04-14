@@ -18,8 +18,6 @@
 //서버로 할때 할거: 파일 나누기, 파일 시리얼 넘버.
 //서버로 보내고 나서: 재전송 준비.
 int main(int argc, char** argv){
-	
-//	client_function();
 
 	int sd, fd, n;
 	char buf[256];
