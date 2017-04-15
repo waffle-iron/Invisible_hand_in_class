@@ -25,11 +25,11 @@ int main(){
 	//printf("closesocket() : 소켓을 닫는다. \n");
 
 	char buf[256];
+        const char filename[255];
 	struct sockaddr_in sin, cli;
 	int sd;
 	socklen_t  clientlen;
-
-
+	
 	//printf("socket() : 소켓을 연다\n");
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
@@ -58,7 +58,15 @@ int main(){
 			exit(1);
 		}
 
-		printf("** From Client : %s\n", buf);
+		printf("** From Client : %s\n", buf);// 파일이름 받고 출력
+///////////////////// 파일 이름 받기///////////////////////////////////
+                usleep(200);
+                if(sendto(sd, buf, strlen(buf)+10, 0, (struct sockaddr *)&sin, sizeof(sin))
+                    == -1){
+                    perror("sendto filename");
+                    exit(1);
+                } 
+/////////////////////////////////////////////////////////////////////
 		int fd;
 		const char* filename = buf;
 
@@ -77,6 +85,13 @@ int main(){
 			buf[bytes_read] = '\0';
 			
 			if(!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
+/////////////////////////////////////////////////////////////////////
+                        
+                        
+                        
+                        
+                        
+/////////////////////////////////////////////////////////////////////
 				printf("file close\n");
 			    close(fd); //stream 닫기
 			    break; //while문 빠져나가기

@@ -48,6 +48,23 @@ int main(int argc, char** argv){
 		perror("sendto filename");
 		exit(1);
 	}
+////////////////////////
+
+        int bytes_read = (recvfrom(sd, buf, 255, 0,
+            (struct sockaddr *)&sin, &add_len));
+        if (bytes_read == -1) {
+                perror("recvfrom filename");
+                exit(1);
+        }
+
+        if(strcmp(filename,buf) != 0) {
+                printf("%s\n", buf);
+            perror("not match filename.");
+            exit(1);
+        }
+	else printf("** match filename : %s\n", buf);// 파일이름 받고출력
+
+////////////////////////
 	//file 내용을 전송
 	while((n = read(fd, buf, 255)) > 0){
 		printf("%d\n", n);
