@@ -60,7 +60,7 @@ int main(){
 
 		printf("** From Client : %s\n", buf);// 파일이름 받고 출력
 ///////////////////// 파일 이름 받기///////////////////////////////////
-                usleep(200);
+
                 if(sendto(sd, buf, strlen(buf)+10, 0, (struct sockaddr *)&sin, sizeof(sin))
                     == -1){
                     perror("sendto filename");
@@ -85,15 +85,20 @@ int main(){
 			buf[bytes_read] = '\0';
 			
 			if(!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
-/////////////////////////////////////////////////////////////////////
-                        
-                        
-                        
-                        
-                        
-/////////////////////////////////////////////////////////////////////
+
 				printf("file close\n");
 			    close(fd); //stream 닫기
+/////////////////파일 끝 받았다고 전송//////////////////
+                        printf("end of file sendto\n");
+                        if(sendto(sd, "end of file", 11, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
+                            perror("sendto end of file");
+                            exit(1);
+                        } 
+                        
+                        
+                        
+                        
+/////////////////////////////////////////////////////////////////////
 			    break; //while문 빠져나가기
 			} else {
 			   	printf("%d byte recv: %s\n", bytes_read, buf);
