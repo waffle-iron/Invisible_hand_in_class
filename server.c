@@ -19,13 +19,7 @@
 //1인자 ip(서버 ip)  2번자인자 파일이름 3번제인자 파일 용량
 int main(){
 
-	//server_function();
-	//printf("send() : 클라이언트에게 값을 보낸다\n");
-	//printf("recv() : 파일을 받는다.\n");
-	//printf("closesocket() : 소켓을 닫는다. \n");
-
 	char buf[256];
-        const char filename[255];
 	struct sockaddr_in sin, cli;
 	int sd;
 	socklen_t  clientlen;
@@ -59,19 +53,29 @@ int main(){
 		}
 
 		printf("** From Client : %s\n", buf);// 파일이름 받고 출력
-///////////////////// 파일 이름 받기///////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+                //POSIX 표준 입출력-> ANSI 입출력
+                FILE *o_fd,*fd;
+                
+		const char* filename = buf;
+                char down_file[248]="./temp/";
+                strcat(down_file,filename);
+                printf("%s",down_file);
+//////////////////////////////////////////////////////////////////////////
+///////////////////// 파일 이름 보내기///////////////////////////////////
 
                 if(sendto(sd, buf, strlen(buf)+10, 0, (struct sockaddr *)&sin, sizeof(sin))
                     == -1){
                     perror("sendto filename");
                     exit(1);
                 } 
+
 /////////////////////////////////////////////////////////////////////
-		int fd;
-		const char* filename = buf;
-
-		fd = open("./temp.dat", O_WRONLY | O_CREAT | O_EXCL, 0644);
-
+                fd = fopen("temp.dat", "w");
+		if(fd == NULL) 
+                    perror("file fail");
+                
+                
 		while(1) {
 			
 			memset(buf,0,sizeof(buf));
@@ -85,27 +89,55 @@ int main(){
 			buf[bytes_read] = '\0';
 			
 			if(!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
+/////////////////////////////////////////////////////////////////////
+                        fclose(fd);
+                        char tempbuffer[256];
+                        o_fd = fopen(down_file, "a");
+                        if(o_fd == NULL)  perror("file fail");
+ 
+                        fd = fopen("temp.dat", "r");
+			
+			memset(tempbuffer,0,sizeof(tempbuffer));
+			
+                        while(fgets(tempbuffer,sizeof(tempbuffer), fd)!=NULL)
+                            fprintf(o_fd,"%s",tempbuffer);
+                        
 
-				printf("file close\n");
-			    close(fd); //stream 닫기
+                        
+			printf("file close\n");
+                        fclose(o_fd);
+			fclose(fd); //stream 닫기
+
+                        
+/////////////////////////////////////////////////////////////////////////
 /////////////////파일 끝 받았다고 전송//////////////////
-                        printf("end of file sendto\n");
+
                         if(sendto(sd, "end of file", 11, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
                             perror("sendto end of file");
                             exit(1);
                         } 
-                        
-                        
-                        
                         
 /////////////////////////////////////////////////////////////////////
 			    break; //while문 빠져나가기
 			} else {
 			   	printf("%d byte recv: %s\n", bytes_read, buf);
 //			    fputs(buf, stream); //파일로 저장		
-				write(fd, buf, 255);
+				fprintf(fd,"%s",buf);
 			}
-		
+
+
+		}
+/////////////////////////////임시 파일 지우기//////////////////////////
+                int remove_tempfile = remove("./temp.dat");
+                if(remove_tempfile == -1) printf("remove fail");
+///////////////////////////////////////////////////////////////////////
+	}
+	
+	return 0;
+}
+
+
+                        
 /*		if (bytes_read > 0) {
 		 // a connection has been established
 			 buf[bytes_read] = '\0';
@@ -128,8 +160,6 @@ int main(){
 				close(sd);
 				exit(0);
 			}
-		}*/
 		}
-	}
-	return 0;
-}
+
+*/

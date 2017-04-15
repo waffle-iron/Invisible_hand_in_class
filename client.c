@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 		perror("sendto filename");
 		exit(1);
 	}
-////////////////////////
+//////////////////////// 파일이름 받기/////////////////////////
 
         int bytes_read = (recvfrom(sd, buf, 255, 0,
             (struct sockaddr *)&sin, &add_len));
@@ -87,12 +87,7 @@ int main(int argc, char** argv){
                 perror("recvfrom end of file");
                 exit(1);
         }
-        if(strcmp("end of file",buf) != 0) {
-                printf("%s\n", buf);
-            perror("not match end of file.");
-            exit(1);
-        }
-	else printf("** match : %s\n", buf);// 파일이름 받고출력
+	printf("%s\n", buf);// end of file출력
 //////////////////////////////////////////////////////////////////////////
 	 return 0;
 }
