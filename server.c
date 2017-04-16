@@ -95,7 +95,7 @@ int main(){
 /////////////////////////////////////////////////////////////////////
                         fclose(fd);
                         char tempbuffer[256];
-                        o_fd = fopen(down_file, "a");
+                        o_fd = fopen(down_file, "w+");
                         if(o_fd == NULL)  perror("file fail");
  
                         fd = fopen("temp.dat", "r");
