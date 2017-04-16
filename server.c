@@ -61,9 +61,9 @@ int main(){
                 FILE *o_fd,*fd;
                 
 		const char* filename = buf;
-                char down_file[248]="./temp/";
-                strcat(down_file,filename);
-                printf("%s",down_file);
+                char finalFile[248]="./temp/";
+                strcat(finalFile,filename);
+                printf("%s",finalFile);
 //////////////////////////////////////////////////////////////////////////
 ///////////////////// 파일 이름 보내기///////////////////////////////////
 
@@ -92,21 +92,21 @@ int main(){
 			buf[bytes_read] = '\0';
 			
 			if(!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
-/////////////////////////////////////////////////////////////////////
+//임시 파일 내용 -> 파일 내용 + 파일 권한 수정
                         fclose(fd);
-                        char tempbuffer[256];
-                        o_fd = fopen(down_file, "w+");
+                        char writeBuffer[256];
+                        o_fd = fopen(finalFile, "w+");
                         if(o_fd == NULL)  perror("file fail");
  
                         fd = fopen("temp.dat", "r");
 			
-			memset(tempbuffer,0,sizeof(tempbuffer));
+			memset(writeBuffer,0,sizeof(writeBuffer));
 			
-                        while(fgets(tempbuffer,sizeof(tempbuffer), fd)!=NULL)
-                            fprintf(o_fd,"%s",tempbuffer);
+                        while(fgets(writeBuffer,sizeof(writeBuffer), fd)!=NULL)
+                            fprintf(o_fd,"%s",writeBuffer);
                         
 
-                        if(chmod(down_file,0766) == -1) 
+                        if(chmod(finalFile,0766) == -1) 
 
                             printf("접근권한 변경에 실패 했습니다. 파일의 접근 권한을 확인해 주세요.");
 			printf("file close\n");
@@ -114,15 +114,15 @@ int main(){
 			fclose(fd); //stream 닫기
 
                         
-/////////////////////////////////////////////////////////////////////////
-/////////////////파일 끝 받았다고 전송//////////////////
+//
+//파일 끝 받았다고 전송
 
                         if(sendto(sd, "end of file", 11, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
                             perror("sendto end of file");
                             exit(1);
                         } 
                         
-/////////////////////////////////////////////////////////////////////
+//
 			    break; //while문 빠져나가기
 			} else {
 			   	printf("%d byte recv: %s\n", bytes_read, buf);
@@ -132,10 +132,10 @@ int main(){
 
 
 		}
-/////////////////////////////임시 파일 지우기//////////////////////////
-                int remove_tempfile = remove("./temp.dat");
-                if(remove_tempfile == -1) printf("remove fail");
-///////////////////////////////////////////////////////////////////////
+//임시 파일 지우기
+                int removeTempFile = remove("./temp.dat");
+                if(removeTempFile == -1) printf("remove fail");
+//
 	}
 	
 	return 0;

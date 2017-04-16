@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 		perror("sendto filename");
 		exit(1);
 	}
-//////////////////////// 파일이름 받기/////////////////////////
+//파일이름 받기
 
         int bytes_read = (recvfrom(sd, buf, 255, 0,
             (struct sockaddr *)&sin, &add_len));
@@ -64,8 +64,8 @@ int main(int argc, char** argv){
         }
 	else printf("** match filename : %s\n", buf);// 파일이름 받고출력
 
-////////////////////////
-	//file 내용을 전송
+//
+//file 내용을 전송
 	while((n = read(fd, buf, 255)) > 0){
 		printf("%d\n", n);
     	if (sendto(sd, buf, n, 0,
@@ -80,7 +80,7 @@ int main(int argc, char** argv){
 		perror("sendto filename");
 		exit(1);
 	}
-//////////////////////////////////////////////////////////////////////
+// end of file 확인
         bytes_read = (recvfrom(sd, buf, 11, 0,
             (struct sockaddr *)&sin, &add_len));
         if (bytes_read == -1) {
@@ -88,6 +88,6 @@ int main(int argc, char** argv){
                 exit(1);
         }
 	printf("%s\n", buf);// end of file출력
-//////////////////////////////////////////////////////////////////////////
+//
 	 return 0;
 }
