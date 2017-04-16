@@ -8,7 +8,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <errno.h>
 #include "function.h"
 
 #define PORTNUM 9005
@@ -24,6 +26,7 @@ int main(){
 	int sd;
 	socklen_t  clientlen;
 	
+	if(mkdir("temp",0777) )
 	//printf("socket() : 소켓을 연다\n");
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
@@ -103,7 +106,9 @@ int main(){
                             fprintf(o_fd,"%s",tempbuffer);
                         
 
-                        
+                        if(chmod(down_file,0766) == -1) 
+
+                            printf("접근권한 변경에 실패 했습니다. 파일의 접근 권한을 확인해 주세요.");
 			printf("file close\n");
                         fclose(o_fd);
 			fclose(fd); //stream 닫기
