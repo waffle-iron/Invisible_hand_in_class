@@ -56,16 +56,15 @@ int main(){
 		}
 
 		printf("** From Client : %s\n", buf);// 파일이름 받고 출력
-////////////////////////////////////////////////////////////////////////
-                //POSIX 표준 입출력-> ANSI 입출력
+//POSIX 표준 입출력-> ANSI 입출력
                 FILE *o_fd,*fd;
                 
 		const char* filename = buf;
                 char finalFile[248]="./temp/";
                 strcat(finalFile,filename);
                 printf("%s",finalFile);
-//////////////////////////////////////////////////////////////////////////
-///////////////////// 파일 이름 보내기///////////////////////////////////
+//
+//파일 이름 보내기
 
                 if(sendto(sd, buf, strlen(buf)+10, 0, (struct sockaddr *)&sin, sizeof(sin))
                     == -1){
