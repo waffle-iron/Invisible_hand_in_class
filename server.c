@@ -20,6 +20,28 @@
 //서버 - 3개를 받아서 ip와 소켓을 열고 하드웨어 용량을 체크
 //1인자 ip(서버 ip)  2번자인자 파일이름 3번제인자 파일 용량
 int main(){
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+#include "function.h"
+
+#define PORTNUM 9005
+//
+//파일 이름만 아니면 경로만 보낼 것인지
+//클라이언트 - 이름과 용량과 아이피
+//서버 - 3개를 받아서 ip와 소켓을 열고 하드웨어 용량을 체크
+//1인자 ip(서버 ip)  2번자인자 파일이름 3번제인자 파일 용량
+int main(){
 
   char buf[256];
   char buf2[256];
@@ -144,6 +166,4 @@ int main(){
   }
 
   return 0;
-
 }
-
