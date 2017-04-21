@@ -13,81 +13,103 @@
 
 #define PORTNUM 9005
 
-//clinet.exe ip file
-//¼­¹ö·Î º¸³¾¶§ Ã¼Å© ÇÒ°Å: ÆÄÀÏ ¿ë·®, ÆÄÀÏ ÀÌ¸§ 
-//¼­¹ö·Î ÇÒ¶§ ÇÒ°Å: ÆÄÀÏ ³ª´©±â, ÆÄÀÏ ½Ã¸®¾ó ³Ñ¹ö.
-//¼­¹ö·Î º¸³»°í ³ª¼­: ÀçÀü¼Û ÁØºñ.
+//ì‹¤í–‰ íŒŒì¼ , ì•„ì´í”¼ ì£¼ì†Œ, íŒŒì¼ ì´ë¦„
 int main(int argc, char** argv){
 
 	int sd, fd, n;
 	char buf[256];
-	const char* filename = argv[2];
+	char end_buf[50];
+	char re_buf[50];
+
+
+	const char* filename = argv[2]; //íŒŒì¼ ì´ë¦„
 	struct sockaddr_in sin;
 	socklen_t add_len = sizeof(struct sockaddr);
-	
+
 	// socket open
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-    	perror("socket");
-	    exit(1);
+		perror("socket");
+		exit(1);
 	}
-	
-	// init 
+
+	// init
 	memset((char *)&sin, '\0', sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = inet_addr("127.0.0.1");
-    sin.sin_port = htons(PORTNUM);
-	
-	//file open 
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = inet_addr(argv[1]);//ì•„ì´í”¼ ì£¼ì†Œ
+	sin.sin_port = htons(PORTNUM);
+
+	//file open
 	fd = open(filename, O_RDONLY);
 	if(fd == -1){
 		perror("file open fail");
 		exit(1);
 	}
 
+	// íŒŒì¼ ì´ë¦„ ì „ì†¡
+
 	if(sendto(sd, filename, strlen(filename)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
-//ÆÄÀÏÀÌ¸§ ¹Ş±â
 
-        int bytes_read = (recvfrom(sd, buf, 255, 0,
-            (struct sockaddr *)&sin, &add_len));
-        if (bytes_read == -1) {
-                perror("recvfrom filename");
-                exit(1);
-        }
+	//íŒŒì¼ì´ë¦„ ë°›ê¸°
+	//ì„œë²„ì—ì„œ íŒŒì¼ì„ ë°›ì€í›„ í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ë‹¤ì‹œ íŒŒì¼ ëª…ì„ ì „ì†¡í•¨
+	//bufë¡œ ë°ì´íƒ€ë¥¼ ì½ì–´ë“¤ì´ê²Œ ëœë‹¤
 
-        if(strcmp(filename,buf) != 0) {
-                printf("%s\n", buf);
-            perror("not match filename.");
-            exit(1);
-        }
-	else printf("** match filename : %s\n", buf);// ÆÄÀÏÀÌ¸§ ¹Ş°íÃâ·Â
+	int bytes_read = (recvfrom(sd, buf, 255, 0, (struct sockaddr *)&sin, &add_len));
 
-//
-//file ³»¿ëÀ» Àü¼Û
-	while((n = read(fd, buf, 255)) > 0){
-		printf("%d\n", n);
-    	if (sendto(sd, buf, n, 0,
-               (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-      		perror("sendto");
-      		exit(1);
+	if (bytes_read == -1) {
+		perror("recvfrom filename");
+		exit(1);
+	}
+
+	//ë‚´ê°€ ë³´ë‚¸ íŒŒì¼ì´ë‘ ì´ë¦„ì´ ë‹¤ë¥¸ê²½ìš°
+	if(strcmp(filename,buf) != 0) { //bufë‘ ë¹„êµ
+		printf("%s\n", buf);
+		perror("not match filename.");
+		exit(1);
+	}
+	else printf("** match filename : %s\n", buf);// íŒŒì¼ì´ë¦„ ë°›ê³ ì¶œë ¥
+
+
+	//file ë‚´ìš©ì„ ì „ì†¡
+	while((n = read(fd, buf, 255)) > 0){ //fdì— ìˆëŠ”ê±¸ bufë¡œ ì €ì¥
+
+		printf("SEND : %d\n", n);
+
+		if (sendto(sd, buf, n, 0,(struct sockaddr *)&sin, sizeof(sin)) == -1) {
+			perror("sendto");
+			exit(1);
 		}
 	}
+
+	/*
+	*/
+
 	memset(buf,0, sizeof(buf));
-	sprintf(buf, "end of file");
-	if(sendto(sd, buf, strlen(buf)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+
+	//sprintf(buf, "end of file"); //bufì—ë‹¤ê°€ end of fileì„ ë¶™ì´ëŠ” ê²ƒ
+ //end of file ì„ ì „ì†¡
+	if(sendto(sd, "end of file", 12, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
-// end of file È®ÀÎ
-        bytes_read = (recvfrom(sd, buf, 11, 0,
-            (struct sockaddr *)&sin, &add_len));
-        if (bytes_read == -1) {
-                perror("recvfrom end of file");
-                exit(1);
-        }
-	printf("%s\n", buf);// end of fileÃâ·Â
-//
-	 return 0;
+
+
+	// end of file í™•ì¸
+	bytes_read = (recvfrom(sd, end_buf, 12, 0,(struct sockaddr *)&sin, &add_len));
+	if (bytes_read == -1) {
+		perror("recvfrom end of file");
+		exit(1);
+	}
+
+	if(strcmp("end of file",end_buf) == 0) { //bufë‘ ë¹„êµ
+		printf("%s\n", end_buf);
+	}else{
+		perror("error : file is not end");
+		exit(1);
+	}
+	close(fd);
+
+	return 0;
 }
