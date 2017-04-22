@@ -28,7 +28,9 @@ int main(){
   const char* filename;
   //const char* filename2;
 
-  if(mkdir("temp",0777) )
+  if(mkdir("temp",0777) ){
+  
+  }
   //printf("socket() : 소켓을 연다\n");
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
     perror("socket");
@@ -42,7 +44,8 @@ int main(){
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
   //printf("connect() : 클라이언트와 연결을 시킨다\n");
-  if (bind(sd, (struct sockaddr *)&sin, sizeof(sin))) {
+  if ( bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1 ) {
+	 
     perror("bind");
     exit(1);
   }
