@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
-#include "function.h"
+#include "library.h"
 
 #define PORTNUM 9005
 //파일 이름만 아니면 경로만 보낼 것인지

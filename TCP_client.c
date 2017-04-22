@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "function.h"
+#include "library.h"
 
 #define PORTNUM 9000
 #define BUFFERSIZE 256
