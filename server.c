@@ -14,29 +14,6 @@
 #include "function.h"
 
 #define PORTNUM 9005
-//
-//파일 이름만 아니면 경로만 보낼 것인지
-//클라이언트 - 이름과 용량과 아이피
-//서버 - 3개를 받아서 ip와 소켓을 열고 하드웨어 용량을 체크
-//1인자 ip(서버 ip)  2번자인자 파일이름 3번제인자 파일 용량
-int main(){
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
-#include "function.h"
-
-#define PORTNUM 9005
-//
 //파일 이름만 아니면 경로만 보낼 것인지
 //클라이언트 - 이름과 용량과 아이피
 //서버 - 3개를 받아서 ip와 소켓을 열고 하드웨어 용량을 체크
@@ -92,7 +69,6 @@ int main(){
     printf("%s",finalFile);
     //////////////////////////////////////////////////////////////////////////
     ///////////////////// 파일 이름 보내기///////////////////////////////////
-
     if(sendto(sd, buf, strlen(buf)+10, 0, (struct sockaddr *)&sin, sizeof(sin))
     == -1){
       perror("sendto filename");
@@ -140,8 +116,6 @@ int main(){
         fclose(o_fd);
         fclose(fd); //stream 닫기
 
-
-        //
         //파일 끝 받았다고 전송
 
         if(sendto(sd, "end of file", strlen("end of file")+1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
@@ -149,20 +123,16 @@ int main(){
           exit(1);
         }
 
-        //
         break; //while문 빠져나가기
       } else {
         printf("%d byte recv: %s\n", bytes_read, buf);
         //			    fputs(buf, stream); //파일로 저장
         fprintf(fd,"%s",buf);
       }
-
-
     }
     //임시 파일 지우기
     int removeTempFile = remove("./temp.dat");
     if(removeTempFile == -1) printf("remove fail");
-    //
   }
 
   return 0;
