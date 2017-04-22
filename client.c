@@ -19,7 +19,7 @@ int main(int argc, char** argv){
 	int sd, fd, n;
 	char buf[256];
 	char end_buf[50];
-	char re_buf[50];
+	//char re_buf[50];
 
 
 	const char* filename = argv[2]; //파일 이름

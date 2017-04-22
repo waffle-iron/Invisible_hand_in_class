@@ -21,12 +21,12 @@
 int main(){
 
   char buf[256];
-  char buf2[256];
+  //char buf2[256];
   struct sockaddr_in sin;
   int sd;
   socklen_t  clientlen;
   const char* filename;
-  const char* filename2;
+  //const char* filename2;
 
   if(mkdir("temp",0777) )
   //printf("socket() : 소켓을 연다\n");
