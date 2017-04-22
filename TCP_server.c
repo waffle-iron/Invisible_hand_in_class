@@ -22,6 +22,11 @@ int main() {
   struct sockaddr_in sin, cli;
   int sd, ns, clientlen = sizeof(cli);
   
+  if(mkdir("temp",0777) == -1){
+    perror("Folder creation failed");
+    exit(1);
+  }
+
   FILE *fd,*o_fd;
   close(sd);
   close(ns);
