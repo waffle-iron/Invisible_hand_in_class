@@ -11,13 +11,13 @@ all: server client
 server: $(SERVER_OBJS)
 	$(CC) $(CFLAGS) -o server.exe $(SERVER_OBJS) $(LIBS)
 
-TCP_server.o: TCP_server.c
+TCP_server.o: TCP_server.c library.h
 	$(CC) $(CFLAGS) -c TCP_server.c $(LIBS)
 
 client: $(CLIENT_OBJS)
 	$(CC) $(CFLAGS) -o client.exe $(CLIENT_OBJS) $(LIBS)
 
-TCP_client.o: TCP_client.c
+TCP_client.o: TCP_client.c library.h
 	$(CC) $(CFLAGS) -c TCP_client.c $(LIBS)
 
 clean:
