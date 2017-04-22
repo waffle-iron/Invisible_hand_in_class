@@ -28,9 +28,8 @@ int main(){
   const char* filename;
   //const char* filename2;
 
-  if(mkdir("temp",0777) ){
-  
-  }
+  mkdir("temp",0777);
+
   //printf("socket() : 소켓을 연다\n");
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
     perror("socket");
@@ -60,7 +59,6 @@ int main(){
     }
 
     printf("** From Client : %s\n", buf);// 파일이름 받고 출력
-    ////////////////////////////////////////////////////////////////////////
     //POSIX 표준 입출력-> ANSI 입출력
     FILE *o_fd,*fd;
     //FILE *o_fd2,*fd2;
@@ -70,7 +68,6 @@ int main(){
     char finalFile[256]="./temp/";
     strcat(finalFile,filename);
     printf("%s",finalFile);
-    //////////////////////////////////////////////////////////////////////////
     ///////////////////// 파일 이름 보내기///////////////////////////////////
     if(sendto(sd, buf, strlen(buf)+10, 0, (struct sockaddr *)&sin, sizeof(sin))
     == -1){
@@ -80,9 +77,10 @@ int main(){
 
     /////////////////////////////////////////////////////////////////////
     fd = fopen("temp.dat", "w");
-    if(fd == NULL)
+    if(fd == NULL){
     perror("file fail");
-
+    exit(1);
+    }
 
     while(1) {
 
@@ -133,8 +131,65 @@ int main(){
         fprintf(fd,"%s",buf);
       }
     }
+    //무결성 체크 시작
+    fd = fopen("temp2.dat", "w+");
+    o_fd = fopen(finalFile, "w+");
+    while(1) {
+
+      memset(buf,0,sizeof(buf));
+      printf("2while\n");
+
+      bytes_read = recvfrom(sd, buf, 255, 0,(struct sockaddr *)&sin, &clientlen);
+      printf("3while\n");
+      if (bytes_read == -1) {
+        perror("recvfrom date");
+        exit(1);
+      }
+      buf[bytes_read] = '\0';
+
+      if(!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
+        //임시 파일 내용 -> 파일 내용 + 파일 권한 수정
+        
+        if(sendto(sd, "end of file", strlen("end of file")+1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
+          perror("sendto end of file");
+          exit(1);
+        }
+
+        char checkBuffer_1[256];
+        char checkBuffer_2[256];
+        memset(checkBuffer_1,0,sizeof(checkBuffer_1));
+        memset(checkBuffer_2,0,sizeof(checkBuffer_2));
+
+        while(fgets(checkBuffer_1,sizeof(checkBuffer_1), fd)!=NULL){//다시 받아온 파일 데이터
+          fgets(checkBuffer_2,sizeof(checkBuffer_2), fd);//원본 파일 데이터
+          if(!strcmp(checkBuffer_1,checkBuffer_2)){
+              perror("file check fail");
+              fclose(fd);
+              fclose(o_fd);
+              exit(1);
+          }
+        }
+
+
+        //100% 전송
+
+        if(sendto(sd, "100%%", strlen("100%%")+1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
+          perror("sendto 100%%");
+          exit(1);
+        }
+        fclose(fd);
+        fclose(o_fd);
+        break; //while문 빠져나가기
+      } else {
+        printf("%d byte recv: %s\n", bytes_read, buf);
+        //			    fputs(buf, stream); //파일로 저장
+        fprintf(fd,"%s",buf);
+      }
+    }
     //임시 파일 지우기
     int removeTempFile = remove("./temp.dat");
+    if(removeTempFile == -1) printf("remove fail");
+    removeTempFile = remove("./temp2.dat");
     if(removeTempFile == -1) printf("remove fail");
   }
 

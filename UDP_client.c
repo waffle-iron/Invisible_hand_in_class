@@ -19,7 +19,7 @@ int main(int argc, char** argv){
 	int sd, fd, n;
 	char buf[256];
 	char end_buf[50];
-	//char re_buf[50];
+	char re_buf[50];
 
 
 	const char* filename = argv[2]; //파일 이름
@@ -108,17 +108,19 @@ int main(int argc, char** argv){
 	///////////////////////////////////////////////////////////
 	//////// 무결성 체크/////////////////////////////////////////////
 	printf("resend if you want to check whether your file is correct send\n");
-	scanf("%s", &filename);
-
+	sleep(2);
+	//scanf("%s", &filename);
+	close(fd);
 	//file open
-	fd = open(filename, O_RDONLY);
-	if(fd == -1){
+	int fd1;
+	fd1 = open(filename, O_RDONLY);
+	if(fd1 == -1){
 		perror("file open fail");
 		exit(1);
 	}
 
 	//file 내용을 다시 전송
-	while((n = read(fd, buf, 255)) > 0){ //fd에 있는걸 buf로 저장
+	while((n = read(fd1, buf, 255)) > 0){ //fd에 있는걸 buf로 저장
 
 		printf("RESEND : %d\n", n);
 
@@ -127,12 +129,31 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 	}
+	if(sendto(sd, "end of file", 12, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("sendto filename");
+		exit(1);
+	}
 
+
+	// end of file 확인
+	bytes_read = (recvfrom(sd, end_buf, 12, 0,(struct sockaddr *)&sin, &add_len));
+	if (bytes_read == -1) {
+		perror("recvfrom end of file");
+		exit(1);
+	}
+
+	if(strcmp("end of file",end_buf) == 0) { //buf랑 비교
+		printf("%s\n", end_buf);
+	}else{
+		perror("error : file is not end");
+		exit(1);
+	}
+	
 	//만약 일치 불일치 메세지 를 받는다.
 	bytes_read = (recvfrom(sd, re_buf, 20, 0,(struct sockaddr *)&sin, &add_len));
 
 	//만약 불일치라면 소켓을 닫는다
-	if(strcmp("100%",re_buf) == 0) { //buf랑 비교
+	if(strcmp("100%%",re_buf) == 0) { //buf랑 비교
 		printf("%s same file\n", re_buf);
 	}else{
 		perror("error : file is not same");

@@ -22,10 +22,7 @@ int main() {
   struct sockaddr_in sin, cli;
   int sd, ns, clientlen = sizeof(cli);
   
-  if(mkdir("temp",0777) == -1){
-    perror("Folder creation failed");
-    exit(1);
-  }
+  mkdir("temp",0777);
 
   FILE *fd,*o_fd;
   close(sd);
@@ -122,15 +119,66 @@ int main() {
                 exit(1);
                 }
 			    break; //while문 빠져나가기
-			} else {
-			   	printf("%d byte recv\n", bytes_read);
+			  } else {
+			   	  printf("%d byte recv\n", bytes_read);
 //			    fputs(buf, stream); //파일로 저장		
-				fwrite(buf , sizeof(char), 255, fd);
-                }
+				    fwrite(buf , sizeof(char), 255, fd);
+          }
+      }
+
+      printf("무결성 체크");//무결성 체크
+      fd = fopen("temp2.dat", "w+");//fd2 다시 연다
+      o_fd = fopen(finalFile, "w+");
+      while(1) {
+			
+			  memset(buf,0,sizeof(buf));
+			  printf("2while\n");
+			  int bytes_read = recv(ns, buf, sizeof(buf), 0);
+			  printf("3while\n");
+			  if (bytes_read == -1) {
+				  perror("recv date");
+				  exit(1);
+			  }
+            buf[bytes_read] = '\0';
+			
+			  if(!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
+          if(send(ns, "end of file", strlen("end of file")+1, 0) == -1){
+            perror("send end of file");
+            exit(1);
+          }
+
+          char checkBuffer_1[256];
+          char checkBuffer_2[256];
+          memset(checkBuffer_1,0,sizeof(checkBuffer_1));
+          memset(checkBuffer_2,0,sizeof(checkBuffer_2));
+
+          while(fgets(checkBuffer_1,sizeof(checkBuffer_1), fd)!=NULL){//다시 받아온 파일 데이터
+            fgets(checkBuffer_2,sizeof(checkBuffer_2), fd);//원본 파일 데이터
+            if(!strcmp(checkBuffer_1,checkBuffer_2)){
+              perror("file check fail");
+              exit(1);
             }
-    int removeTempFile = remove("./temp.dat");
-    if(removeTempFile == -1) printf("remove fail");
-    close(ns);
+          }
+          fclose(fd);
+          fclose(o_fd);
+          if(send(ns, "100%%", strlen("100%%")+1, 0) == -1){
+            perror("send 100%%");
+            exit(1);
+          }
+          
+          break;  
+        }
+        else {
+			   	  printf("%d byte recv\n", bytes_read);
+//			    fputs(buf, stream); //파일로 저장		
+				    fwrite(buf , sizeof(char), 255, fd);
+          }
+      }
+      int removeTempFile = remove("./temp.dat");
+      if(removeTempFile == -1) printf("remove fail");
+      removeTempFile = remove("./temp2.dat");
+      if(removeTempFile == -1) printf("remove fail");
+      close(ns);
     }
     
     close(sd);
