@@ -20,7 +20,8 @@ int main() {
   char buf[256];
   const char* filename;
   struct sockaddr_in sin, cli;
-  int sd = 0, ns = 0, clientlen = sizeof(cli);
+  int sd = 0, ns = 0;
+  socklen_t clientlen = sizeof(cli);
 
   mkdir("temp",0777);
 
