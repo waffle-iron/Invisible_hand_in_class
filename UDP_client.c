@@ -109,7 +109,7 @@ int main(int argc, char** argv){
 	//////// 무결성 체크/////////////////////////////////////////////
 	printf("resend if you want to check whether your file is correct send\n");
 	sleep(2);
-	//scanf("%s", &filename);
+	scanf("file : %s", &filename);
 	close(fd);
 	//file open
 	int fd1;
@@ -148,7 +148,7 @@ int main(int argc, char** argv){
 		perror("error : file is not end");
 		exit(1);
 	}
-	
+
 	//만약 일치 불일치 메세지 를 받는다.
 	bytes_read = (recvfrom(sd, re_buf, 20, 0,(struct sockaddr *)&sin, &add_len));
 
