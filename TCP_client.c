@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     perror("socket");
     exit(1);
   }
-
+  //e
   memset((char *)&sin, '\0', sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = htons(PORTNUM);
