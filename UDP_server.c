@@ -126,12 +126,13 @@ int main(){
 
         break; //while문 빠져나가기
       } else {
-        printf("%d byte recv: %s\n", bytes_read, buf);
+        //printf("%d byte recv: %s\n", bytes_read, buf);
         //			    fputs(buf, stream); //파일로 저장
         fprintf(fd,"%s",buf);
       }
     }
     //무결성 체크 시작
+    printf("무결성 체크 시작");
     fd = fopen("temp2.dat", "w+");
     o_fd = fopen(finalFile, "w+");
     while(1) {
@@ -181,7 +182,7 @@ int main(){
         fclose(o_fd);
         break; //while문 빠져나가기
       } else {
-        printf("%d byte recv: %s\n", bytes_read, buf);
+        //printf("%d byte recv: %s\n", bytes_read, buf);
         //			    fputs(buf, stream); //파일로 저장
         fprintf(fd,"%s",buf);
       }
