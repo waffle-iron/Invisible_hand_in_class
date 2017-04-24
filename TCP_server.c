@@ -17,69 +17,69 @@
 #define BUFFERSIZE 256
 
 int main() {
-  char buf[256];
-  const char* filename;
-  struct sockaddr_in sin, cli;
-  int sd = 0, ns = 0;
-  socklen_t clientlen = sizeof(cli);
+	char buf[256];
+	const char* filename;
+	struct sockaddr_in sin, cli;
+	int sd = 0, ns = 0;
+	socklen_t clientlen = sizeof(cli);
 
-  mkdir("temp",0777);
+	mkdir("temp", 0777);
 
-  FILE *fd,*o_fd;
-  close(sd);
-  close(ns);
-  if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-      perror("socket");
-      exit(1);
-  }
+	FILE *fd, *o_fd;
+	close(sd);
+	close(ns);
+	if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("socket");
+		exit(1);
+	}
 
-  memset((char *)&sin, '\0', sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(PORTNUM);
-  sin.sin_addr.s_addr = htonl(INADDR_ANY);
+	memset((char *)&sin, '\0', sizeof(sin));
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(PORTNUM);
+	sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  if (bind(sd, (struct sockaddr *)&sin, sizeof(sin))) {
-      perror("bind");
-      exit(1);
-  }
+	if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+		perror("bind");
+		exit(1);
+	}
 
-  while (1) {
+	if (listen(sd, 5) == -1) {
+		perror("listen");
+		exit(1);
+	}
+	printf("whiel들어가기전에");
+	while (1) {
 		printf("inwhile~~\n");
 
-        if (listen(sd, 5)) {
-            perror("listen");
-            exit(1);
-        }
-
-        if ((ns = accept(sd, (struct sockaddr *)&cli, &clientlen))==-1){
-            perror("accept");
-            exit(1);
-        }
+		if ((ns = accept(sd, (struct sockaddr *)&cli, &clientlen)) == -1){
+			perror("accept");
+			exit(1);
+		}
 
 		if (recv(ns, buf, 256, 0) == -1){
-            perror("recv filename");
-            exit(1);
-        }
+			perror("recv filename");
+			exit(1);
+		}
 
-        filename = buf;
+		filename = buf;
 
-        if (send(ns, buf, strlen(buf) + 1, 0) == -1) {
-            perror("send");
-            exit(1);
-        }
-        fd = fopen("temp.dat", "w");
-        if(fd == NULL)
-        perror("file fail");
-
-
-        char finalFile[248]="./temp/";
-        strcat(finalFile,filename);
-        printf("%s",finalFile);
+		if (send(ns, buf, strlen(buf) + 1, 0) == -1) {
+			perror("send");
+			exit(1);
+		}
+		fd = fopen("temp.dat", "w");
+		if (fd == NULL)
+			perror("file fail");
 
 
-		while(1) {
+		char finalFile[248] = "./temp/";
+		strcat(finalFile, filename);
+		printf("%s", finalFile);
 
-			memset(buf,0,sizeof(buf));
+		// 정현 - 파일내용 받는곳 같음
+		while (1) {
+
+			memset(buf, 0, sizeof(buf));
 			printf("2while\n");
 			int bytes_read = recv(ns, buf, sizeof(buf), 0);
 			printf("3while\n");
@@ -87,101 +87,102 @@ int main() {
 				perror("recv date");
 				exit(1);
 			}
-            buf[bytes_read] = '\0';
+			buf[bytes_read] = '\0';
 
-			if(!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
+			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
 				printf("file close\n");
-			    fclose(fd);
-                char writeBuffer[256];
-                o_fd = fopen(finalFile, "w+");
-                if(o_fd == NULL)  perror("file fail");
+				fclose(fd);
+				char writeBuffer[256];
+				o_fd = fopen(finalFile, "w+");
+				if (o_fd == NULL)  perror("file fail");
 
-                fd = fopen("temp.dat", "r");
+				fd = fopen("temp.dat", "r");
 
-                memset(writeBuffer,0,sizeof(writeBuffer));
+				memset(writeBuffer, 0, sizeof(writeBuffer));
 
-                while(fgets(writeBuffer,sizeof(writeBuffer), fd)!=NULL)
-                fprintf(o_fd,"%s",writeBuffer);
+				while (fgets(writeBuffer, sizeof(writeBuffer), fd) != NULL)
+					fprintf(o_fd, "%s", writeBuffer);
 
 
 
-                if(chmod(finalFile,0766) == -1)
+				if (chmod(finalFile, 0766) == -1)
 
-                printf("접근권한 변경에 실패 했습니다. 파일의 접근 권한을 확인해 주세요.");
-                printf("file close\n");
-                fclose(o_fd);
-                fclose(fd); //stream 닫기
+					printf("접근권한 변경에 실패 했습니다. 파일의 접근 권한을 확인해 주세요.");
+				printf("file close\n");
+				fclose(o_fd);
+				fclose(fd); //stream 닫기
 
-                //
-                //파일 끝 받았다고 전송
+				//
+				//파일 끝 받았다고 전송
 
-                if(send(ns, "end of file", strlen("end of file")+1, 0) == -1){
-                perror("send end of file");
-                exit(1);
-                }
-			    break; //while문 빠져나가기
-			  } else {
-			   	  printf("%d byte recv\n", bytes_read);
-//			    fputs(buf, stream); //파일로 저장
-				    fwrite(buf , sizeof(char), 255, fd);
-          }
-      }
+				if (send(ns, "end of file", strlen("end of file") + 1, 0) == -1){
+					perror("send end of file");
+					exit(1);
+				}
+				break; //while문 빠져나가기
+			} else {
+				printf("%d byte recv\n", bytes_read);
+				//			    fputs(buf, stream); //파일로 저장
+				fwrite(buf, sizeof(char), 255, fd);
+			}
+		}
+		//무결성 체크
+		printf("무결성 체크\n");
+		fd = fopen("temp2.dat", "w+");//fd2 다시 연다
+		o_fd = fopen(finalFile, "w+");
+		while (1) {
 
-      printf("무결성 체크");//무결성 체크
-      fd = fopen("temp2.dat", "w+");//fd2 다시 연다
-      o_fd = fopen(finalFile, "w+");
-      while(1) {
+			memset(buf, 0, sizeof(buf));
+			printf("무결성2while\n");
+			int bytes_read = recv(ns, buf, sizeof(buf), 0);
+			printf("무결성3while\n");
+			if (bytes_read == -1) {
+				perror("recv date");
+				exit(1);
+			}
+			buf[bytes_read] = '\0';
 
-			  memset(buf,0,sizeof(buf));
-			  printf("2while\n");
-			  int bytes_read = recv(ns, buf, sizeof(buf), 0);
-			  printf("3while\n");
-			  if (bytes_read == -1) {
-				  perror("recv date");
-				  exit(1);
-			  }
-            buf[bytes_read] = '\0';
+			if (strncmp(buf, "end of file", 12) == 0) { //마지막 메시지가 end of file이면 종료
+				if (send(ns, "end of file", strlen("end of file") + 1, 0) == -1){
+					perror("send end of file");
+					exit(1);
+				}
 
-			  if(!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
-          if(send(ns, "end of file", strlen("end of file")+1, 0) == -1){
-            perror("send end of file");
-            exit(1);
-          }
+				char checkBuffer_1[256];
+				char checkBuffer_2[256];
+				memset(checkBuffer_1, 0, sizeof(checkBuffer_1));
+				memset(checkBuffer_2, 0, sizeof(checkBuffer_2));
 
-          char checkBuffer_1[256];
-          char checkBuffer_2[256];
-          memset(checkBuffer_1,0,sizeof(checkBuffer_1));
-          memset(checkBuffer_2,0,sizeof(checkBuffer_2));
-
-          while(fgets(checkBuffer_1,sizeof(checkBuffer_1), fd)!=NULL){//다시 받아온 파일 데이터
-            fgets(checkBuffer_2,sizeof(checkBuffer_2), fd);//원본 파일 데이터
-            if(!strcmp(checkBuffer_1,checkBuffer_2)){
-              perror("file check fail");
-              exit(1);
-            }
-          }
-          fclose(fd);
-          fclose(o_fd);
-          if(send(ns, "100%%", strlen("100%%")+1, 0) == -1){
-            perror("send 100%%");
-            exit(1);
-          }
-
-          break;
-        }
-        else {
-			   	  printf("%d byte recv\n", bytes_read);
-//			    fputs(buf, stream); //파일로 저장
-				    fwrite(buf , sizeof(char), 255, fd);
-          }
-      }
-      int removeTempFile = remove("./temp.dat");
-      if(removeTempFile == -1) printf("remove fail");
-      removeTempFile = remove("./temp2.dat");
-      if(removeTempFile == -1) printf("remove fail");
-      close(ns);
-    }
-
-    close(sd);
-    return 0;
+				while (fgets(checkBuffer_1, sizeof(checkBuffer_1), fd) != NULL){//다시 받아온 파일 데이터
+					fgets(checkBuffer_2, sizeof(checkBuffer_2), fd);//원본 파일 데이터
+					if (!strcmp(checkBuffer_1, checkBuffer_2)){
+						perror("file check fail");
+						exit(1);
+					}
+				}
+				fclose(fd);
+				fclose(o_fd);
+				printf("send전입니다\n");
+				if (send(ns, "100percent", strlen("100percent") + 1, 0) == -1){
+					perror("send 100");
+					exit(1);
+				}
+				
+				printf("send후\n");
+				break;
+			} else {
+				printf("%d byte recv\n", bytes_read);
+				//			    fputs(buf, stream); //파일로 저장
+				fwrite(buf, sizeof(char), 255, fd);
+			}
+		}
+		int removeTempFile = remove("./temp.dat");
+		if (removeTempFile == -1) printf("remove fail");
+		removeTempFile = remove("./temp2.dat");
+		if (removeTempFile == -1) printf("remove fail");
+		printf("close 전이다\n");
+		close(ns);
+		//close(sd);
+	}
+	return 0;
 }
