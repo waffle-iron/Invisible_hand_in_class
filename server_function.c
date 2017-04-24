@@ -279,6 +279,9 @@ void TcpServer(){
 	char buf[SIZEBUF + 1];
 	const char* filename;
 	struct sockaddr_in sin, cli;
+     struct timeval start_point, end_point;
+     struct stat inf_file;
+
 	int sd = 0, ns = 0;
 	socklen_t clientlen = sizeof(cli);
 
@@ -336,6 +339,7 @@ void TcpServer(){
 		printf("%s\n", finalFile);
 
 		// 정현 - 파일내용 받는곳 같음
+		gettimeofday(&start_point, NULL);
 		while (1) {
 			memset(buf, 0, SIZEBUF);
 			//			printf("2while\n");
@@ -352,6 +356,11 @@ void TcpServer(){
 			buf[bytes_read] = '\0';
 			//			printf("finaleFIle2 = %s\n", finalFile);
 			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
+				gettimeofday(&end_point, NULL);
+					stat(buf, &inf_file);
+					int file_size=inf_file.st_size;
+					double timer = File_transfer_speed(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
+					printf("%f Byte",(double)file_size/timer);
 				printf("file close\n");
 				fclose(fd);
 
