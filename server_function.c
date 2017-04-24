@@ -7,7 +7,6 @@ void UdpServer(){
 
 	struct sockaddr_in sin;
 	socklen_t  clientlen = sizeof(sin);;
-	const char* filename;
 	
 	//저장할 장소 생성
 	mkdir("save", 0644);
@@ -33,9 +32,9 @@ void UdpServer(){
 	//
 	while (1) {
 		printf("inwhile~~\n");
-		
+		int bytes_read;
 		// 디렉토리인지 파일인지 받는 부분
-		if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+		if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
 			perror("recvfrom isDIR");
 			exit(1);
 		}
@@ -52,7 +51,7 @@ void UdpServer(){
 		if (strcmp("This is File", buf) == 0){
 			int fd;
 			//파일 이름 받기
-			if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+			if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
 				perror("recvfrom filename");
 				exit(1);
 			}
@@ -64,7 +63,7 @@ void UdpServer(){
 				perror("sendto filename");
 				exit(1);
 			}
-			
+
 			//그리고 파일 받기 
 			// 파일열기
 			if ((fd = open(buf, O_RDONLY)) == -1){
@@ -76,17 +75,17 @@ void UdpServer(){
 
 				memset(buf, 0, sizeof(buf));
 
-				if ((bytes_read = recvfrom(sd, end_buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+				if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
 					perror("recvfrom end of file");
 					exit(1);
 				}
 				printf("RECV : %d byte\n", bytes_read);
- 
+
 				//buf[bytes_read] = '\0';
 
 				if (!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
 					//파일 끝 받았다고 전송
-					if (sendto(sd, "end of file", strlen("end of file") + 1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
+					if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
 						perror("sendto end of file");
 						exit(1);
 					}
@@ -102,9 +101,9 @@ void UdpServer(){
 			}
 		} else if (strcmp("This is DIR", buf) == 0){
 			//디렉토리 인 경우 디렉토리 만들기 그리고 그 디렉토리로 이동
-			
+
 			//디렉토리 이름 받기
-			if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+			if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
 				perror("recvfrom dirname");
 				exit(1);
 			}
@@ -112,11 +111,11 @@ void UdpServer(){
 			if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 				perror("sendto dirname");
 				exit(1);
-			} 
+			}
 			mkdir(buf, 0644);
 			//		chdir(buf);
 		}
- 
+
 		//printf("** From Client : %s\n", buf);// 파일이름 받고 출력
 		////POSIX 표준 입출력-> ANSI 입출력
 		//FILE *o_fd, *fd;
@@ -193,71 +192,71 @@ void UdpServer(){
 		//	}
 		//}
 		//무결성 체크 시작
-	//	printf("무결성 체크 시작");
-	//	fd = fopen("temp2.dat", "w+");
-	//	o_fd = fopen(finalFile, "w+");
-	//	while (1) {
+		//	printf("무결성 체크 시작");
+		//	fd = fopen("temp2.dat", "w+");
+		//	o_fd = fopen(finalFile, "w+");
+		//	while (1) {
 
-	//		memset(buf, 0, sizeof(buf));
-	//		//printf("2while\n");
+		//		memset(buf, 0, sizeof(buf));
+		//		//printf("2while\n");
 
-	//		bytes_read = recvfrom(sd, buf, 255, 0, (struct sockaddr *)&sin, &clientlen);
-	//		printf("RECV : %d byte\n", bytes_read);
+		//		bytes_read = recvfrom(sd, buf, 255, 0, (struct sockaddr *)&sin, &clientlen);
+		//		printf("RECV : %d byte\n", bytes_read);
 
-	//		//printf("3while\n");
-	//		if (bytes_read == -1) {
-	//			perror("recvfrom date");
-	//			exit(1);
-	//		}
-	//		buf[bytes_read] = '\0';
+		//		//printf("3while\n");
+		//		if (bytes_read == -1) {
+		//			perror("recvfrom date");
+		//			exit(1);
+		//		}
+		//		buf[bytes_read] = '\0';
 
-	//		if (!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
-	//			//임시 파일 내용 -> 파일 내용 + 파일 권한 수정
+		//		if (!strncmp(buf, "end of file", 10)) { //마지막 메시지가 end of file이면 종료
+		//			//임시 파일 내용 -> 파일 내용 + 파일 권한 수정
 
-	//			if (sendto(sd, "end of file", strlen("end of file") + 1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
-	//				perror("sendto end of file");
-	//				exit(1);
-	//			}
+		//			if (sendto(sd, "end of file", strlen("end of file") + 1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
+		//				perror("sendto end of file");
+		//				exit(1);
+		//			}
 
-	//			char checkBuffer_1[256];
-	//			char checkBuffer_2[256];
-	//			memset(checkBuffer_1, 0, sizeof(checkBuffer_1));
-	//			memset(checkBuffer_2, 0, sizeof(checkBuffer_2));
+		//			char checkBuffer_1[256];
+		//			char checkBuffer_2[256];
+		//			memset(checkBuffer_1, 0, sizeof(checkBuffer_1));
+		//			memset(checkBuffer_2, 0, sizeof(checkBuffer_2));
 
-	//			while (fgets(checkBuffer_1, sizeof(checkBuffer_1), fd) != NULL){//다시 받아온 파일 데이터
-	//				fgets(checkBuffer_2, sizeof(checkBuffer_2), fd);//원본 파일 데이터
-	//				if (!strcmp(checkBuffer_1, checkBuffer_2)){
-	//					perror("file check fail");
-	//					fclose(fd);
-	//					fclose(o_fd);
-	//					exit(1);
-	//				}
-	//			}
-
-
-	//			//100% 전송
-
-	//			if (sendto(sd, "100%%", strlen("100%%") + 1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
-	//				perror("sendto 100%%");
-	//				exit(1);
-	//			}
-	//			fclose(fd);
-	//			fclose(o_fd);
-	//			break; //while문 빠져나가기
-	//		} else {
-	//			printf("Ingridty : %d byte \n", bytes_read);
-
-	//			fprintf(fd, "%s", buf);
-	//		}
-	//	}
-	//	//임시 파일 지우기
-	//	int removeTempFile = remove("./temp.dat");
-	//	if (removeTempFile == -1) printf("remove fail");
-	//	removeTempFile = remove("./temp2.dat");
-	//	if (removeTempFile == -1) printf("remove fail");
-	//}
+		//			while (fgets(checkBuffer_1, sizeof(checkBuffer_1), fd) != NULL){//다시 받아온 파일 데이터
+		//				fgets(checkBuffer_2, sizeof(checkBuffer_2), fd);//원본 파일 데이터
+		//				if (!strcmp(checkBuffer_1, checkBuffer_2)){
+		//					perror("file check fail");
+		//					fclose(fd);
+		//					fclose(o_fd);
+		//					exit(1);
+		//				}
+		//			}
 
 
+		//			//100% 전송
+
+		//			if (sendto(sd, "100%%", strlen("100%%") + 1, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
+		//				perror("sendto 100%%");
+		//				exit(1);
+		//			}
+		//			fclose(fd);
+		//			fclose(o_fd);
+		//			break; //while문 빠져나가기
+		//		} else {
+		//			printf("Ingridty : %d byte \n", bytes_read);
+
+		//			fprintf(fd, "%s", buf);
+		//		}
+		//	}
+		//	//임시 파일 지우기
+		//	int removeTempFile = remove("./temp.dat");
+		//	if (removeTempFile == -1) printf("remove fail");
+		//	removeTempFile = remove("./temp2.dat");
+		//	if (removeTempFile == -1) printf("remove fail");
+		//}
+
+	}
 }
 
 void TcpServer(){
