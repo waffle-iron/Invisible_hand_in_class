@@ -55,7 +55,7 @@ int main() {
 		perror("listen");
 		exit(1);
 	}
-	printf("whiel들어가기전에");
+//	printf("whiel들어가기전에");
 	while (1) {
 		printf("inwhile~~\n");
 
@@ -86,27 +86,27 @@ int main() {
 
 		// 정현 - 파일내용 받는곳 같음
 		while (1) {
-			printf("finaleFIle1 = %s\n", finalFile);
+//			printf("finaleFIle1 = %s\n", finalFile);
 			memset(buf, 0, SIZEBUF);
-			printf("finaleFIle = %s\n", finalFile);
+//			printf("finaleFIle = %s\n", finalFile);
 //			printf("2while\n");
 			int bytes_read = 0;
 			bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL);
-			printf("finalerecv밑이다 = %s\n", finalFile);
-            printf("RECV : %d\n",bytes_read);
-            printf("buf = %s\n",buf);
+//			printf("finalerecv밑이다 = %s\n", finalFile);
+            printf("RECV : %d byte\n",bytes_read);
+//            printf("buf = %s\n",buf);
 //			printf("3while\n");
 			if (bytes_read == -1) {
 				perror("recv date");
 				exit(1);
 			}
 			buf[bytes_read] = '\0';
-			printf("finaleFIle2 = %s\n", finalFile);
+//			printf("finaleFIle2 = %s\n", finalFile);
 			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
 				printf("file close\n");
 				fclose(fd);
 				char writeBuffer[SIZEBUF];
-				printf("%s finaleFIle \n", finalFile);
+				printf("%s finaleFILE 경로 \n", finalFile);
 				o_fd = fopen(finalFile, "w+");
 				if (o_fd == NULL)  perror("file fail");
 
@@ -122,7 +122,7 @@ int main() {
 				if (chmod(finalFile, 0766) == -1)
 
 					printf("접근권한 변경에 실패 했습니다. 파일의 접근 권한을 확인해 주세요.");
-				printf("file close\n");
+				//printf("file close\n");
 				fclose(o_fd);
 				fclose(fd); //stream 닫기
 
@@ -147,9 +147,9 @@ int main() {
 		while (1) {
 
 			memset(buf, 0, SIZEBUF);
-			printf("무결성2while\n");
+//			printf("무결성2while\n");
 			int bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL);
-			printf("무결성3while\n");
+//			printf("무결성3while\n");
 			if (bytes_read == -1) {
 				perror("recv date");
 				exit(1);
@@ -176,16 +176,16 @@ int main() {
 				}
 				fclose(fd);
 				fclose(o_fd);
-				printf("send전입니다\n");
+			//	printf("send전입니다\n");
 				if (send(ns, "100percent", SIZEBUF, 0) == -1){
 					perror("send 100");
 					exit(1);
 				}
 				
-				printf("send후\n");
+			//	printf("send후\n");
 				break;
 			} else {
-				printf("%d byte recv\n", bytes_read);
+				printf("Ingridty : %d byte \n", bytes_read);
 				//			    fputs(buf, stream); //파일로 저장
 				fwrite(buf, sizeof(char), SIZEBUF, fd);
 			}
@@ -194,7 +194,7 @@ int main() {
 		if (removeTempFile == -1) printf("remove fail");
 		removeTempFile = remove("./temp2.dat");
 		if (removeTempFile == -1) printf("remove fail");
-		printf("close 전이다\n");
+		//printf("close 전이다\n");
 		close(ns);
 		//close(sd);
 	}
