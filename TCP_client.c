@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include "library.h"
 
 #define PORTNUM 9000
@@ -18,7 +19,7 @@ int main(int argc, char** argv) {
 	int sd, fd, n;
 	char buf[SIZEBUF];
 	char end_buf[SIZEBUF];
-	char percent[SIZEBUF];
+	char percent[SIZEBUF+1];
 	struct sockaddr_in sin;
 	const char* filename = argv[2]; //파일 이름
 	printf("%s\n", filename);
@@ -53,7 +54,7 @@ int main(int argc, char** argv) {
 
 
 	//파일 명 다시 받기
-	int bytes_read = (recv(sd, buf, SIZEBUF, 0));
+	int bytes_read = (recv(sd, buf, SIZEBUF, MSG_WAITALL));
 
 	if (bytes_read < 0) {
 		perror("recvfrom filename");
@@ -92,7 +93,7 @@ int main(int argc, char** argv) {
 
 
 	// end of file 확인
-	bytes_read = (recv(sd, end_buf, SIZEBUF, 0));
+	bytes_read = (recv(sd, end_buf, SIZEBUF, MSG_WAITALL));
 
 	if (bytes_read == -1) {
 		perror("recv end of file");
@@ -157,10 +158,10 @@ int main(int argc, char** argv) {
 	}
 	//여긴 머냐
 	//만약 일치 불일치 메세지 를 받는다.
-	memset(percent, 0, SIZEBUF);
+	memset(percent, 0, SIZEBUF+1);
 	printf("불일치 사이즈: %d\n", bytes_read);
 	bytes_read = recv(sd, percent, SIZEBUF, 0);
-	percent[bytes_read] = '\0';
+	//percent[bytes_read] = '\0';
 	printf("불일치 사이즈: %d\n", bytes_read);
 	printf("%s 퍼센트 가 무엇인지 출력\n", percent);
 	//만약 불일치라면 소켓을 닫는다

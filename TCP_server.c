@@ -11,11 +11,20 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/time.h>
 #include "library.h"
 
 #define PORTNUM 9000
 
 int main() {
+	//struct timeval timeout;	//setting timeout to socket
+	//timeout.tv_sec = MY_TIMEOUT_VAL;
+	//timeout.tv_usec = 0;
+
+	//result = setsockopt(*sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));	//timeout 지정
+
+	//rcv_len = recv(*sock, recv_buf, MY_RECV_LEN, MSG_WAITALL);
+
 	char buf[SIZEBUF+1];
 	const char* filename;
 	struct sockaddr_in sin, cli;
@@ -55,7 +64,7 @@ int main() {
 			exit(1);
 		}
 
-		if (recv(ns, buf, SIZEBUF, 0) == -1){
+		if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
 			perror("recv filename");
 			exit(1);
 		}
@@ -82,7 +91,7 @@ int main() {
 			printf("finaleFIle = %s\n", finalFile);
 //			printf("2while\n");
 			int bytes_read = 0;
-			bytes_read = recv(ns, buf, SIZEBUF, 0);
+			bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL);
 			printf("finalerecv밑이다 = %s\n", finalFile);
             printf("RECV : %d\n",bytes_read);
             printf("buf = %s\n",buf);
@@ -139,7 +148,7 @@ int main() {
 
 			memset(buf, 0, SIZEBUF);
 			printf("무결성2while\n");
-			int bytes_read = recv(ns, buf, SIZEBUF, 0);
+			int bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL);
 			printf("무결성3while\n");
 			if (bytes_read == -1) {
 				perror("recv date");
@@ -148,7 +157,7 @@ int main() {
 			buf[bytes_read] = '\0';
 
 			if (strncmp(buf, "end of file", 12) == 0) { //마지막 메시지가 end of file이면 종료
-				if (send(ns, "end of file", strlen("end of file") + 1, 0) == -1){
+				if (send(ns, "end of file", SIZEBUF, 0) == -1){
 					perror("send end of file");
 					exit(1);
 				}
