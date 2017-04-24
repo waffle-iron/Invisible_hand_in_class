@@ -69,21 +69,23 @@ int main(int argc, char** argv) {
 
 
 	//file 내용을 전송
-	while ((n = read(fd, buf, 256)) > 0){ //fd에 있는걸 buf로 저장
+	while ((n = read(fd, buf, sizeof(buf))) > 0){ //fd에 있는걸 buf로 저장
 
 		printf("SEND : %d\n", n);
-
-		if (send(sd, buf, strlen(buf), 0) == -1) {
+        int a = send(sd,buf,sizeof(buf),0);
+		if (a == -1) {
 			perror("sendto");
 			exit(1);
 		}
+        printf("buf = %s\n",buf); 
+        memset(buf,0,256);
 	}
 
 
 	memset(buf, 0, sizeof(buf));
-
+    sprintf(buf,"end of file");
 	//end of file 을 전송
-	if (send(sd, "end of file", sizeof(buf), 0) == -1){
+	if (send(sd, buf, sizeof(buf), 0) == -1){
 		perror("send filena?me");
 		exit(1);
 	}
@@ -122,17 +124,20 @@ int main(int argc, char** argv) {
 	}
 
 	//file 내용을 다시 전송
-	while ((n = read(fd1, buf, 256)) > 0){ //fd에 있는걸 buf로 저장
+	while ((n = read(fd1, buf, sizeof(buf))) > 0){ //fd에 있는걸 buf로 저장
 
 		printf("RESEND : %d\n", n);
 
-		if (send(sd, buf, strlen(buf), 0) == -1) {
+		if (send(sd, buf, sizeof(buf), 0) == -1) {
 			perror("resendto");
 			exit(1);
 		}
+        memset(buf,0,256);
 	}
+    memset(buf,0,sizeof(buf));
+    sprintf(buf,"end of file");
 	//파일끝이라고 전송
-	if (send(sd, "end of file", 12, 0) == -1){
+	if (send(sd, buf, sizeof(buf), 0) == -1){
 		perror("send filena?me");
 		exit(1);
 	}

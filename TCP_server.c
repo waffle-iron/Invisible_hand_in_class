@@ -24,7 +24,7 @@ int main() {
 	socklen_t clientlen = sizeof(cli);
 
 	mkdir("temp", 0777);
-
+    printf("%d\n",BUFSIZ);
 	FILE *fd, *o_fd;
 	close(sd);
 	close(ns);
@@ -80,9 +80,12 @@ int main() {
 		while (1) {
 
 			memset(buf, 0, sizeof(buf));
-			printf("2while\n");
-			int bytes_read = recv(ns, buf, sizeof(buf), 0);
-			printf("3while\n");
+//			printf("2while\n");
+			int bytes_read =0;
+            bytes_read = recv(ns, buf, 256, 0);
+            printf("RECV : %d\n",bytes_read);
+            printf("buf = %s\n",buf);
+//			printf("3while\n");
 			if (bytes_read == -1) {
 				perror("recv date");
 				exit(1);
@@ -121,9 +124,9 @@ int main() {
 				}
 				break; //while문 빠져나가기
 			} else {
-				printf("%d byte recv\n", bytes_read);
+//				printf("%d byte recv\n", bytes_read);
 				//			    fputs(buf, stream); //파일로 저장
-				fwrite(buf, sizeof(char), 255, fd);
+				fwrite(buf, sizeof(char), 256, fd);
 			}
 		}
 		//무결성 체크
@@ -134,7 +137,7 @@ int main() {
 
 			memset(buf, 0, sizeof(buf));
 			printf("무결성2while\n");
-			int bytes_read = recv(ns, buf, sizeof(buf), 0);
+			int bytes_read = recv(ns, buf, 256, 0);
 			printf("무결성3while\n");
 			if (bytes_read == -1) {
 				perror("recv date");
