@@ -16,9 +16,9 @@
 
 int main(int argc, char** argv) {
 	int sd, fd, n;
-	char buf[BUFFERSIZE];
-	char end_buf[50];
-	char percent[50];
+	char buf[SIZEBUF];
+	char end_buf[SIZEBUF];
+	char percent[SIZEBUF];
 	struct sockaddr_in sin;
 	const char* filename = argv[2]; //파일 이름
 	printf("%s\n", filename);
@@ -46,14 +46,14 @@ int main(int argc, char** argv) {
 	}
 
 	// 파일 이름 전송
-	if (send(sd, filename, strlen(filename) + 10, 0) == -1){
+	if (send(sd, filename, SIZEBUF, 0) == -1){
 		perror("send filename");
 		exit(1);
 	}
 
 
 	//파일 명 다시 받기
-	int bytes_read = (recv(sd, buf, BUFFERSIZE - 1, 0));
+	int bytes_read = (recv(sd, buf, SIZEBUF, 0));
 
 	if (bytes_read < 0) {
 		perror("recvfrom filename");
@@ -69,10 +69,10 @@ int main(int argc, char** argv) {
 
 
 	//file 내용을 전송
-	while ((n = read(fd, buf, sizeof(buf))) > 0){ //fd에 있는걸 buf로 저장
+	while ((n = read(fd, buf, SIZEBUF)) > 0){ //fd에 있는걸 buf로 저장
 
 		printf("SEND : %d\n", n);
-        int a = send(sd,buf,sizeof(buf),0);
+		int a = send(sd, buf, SIZEBUF, 0);
 		if (a == -1) {
 			perror("sendto");
 			exit(1);
@@ -82,17 +82,17 @@ int main(int argc, char** argv) {
 	}
 
 
-	memset(buf, 0, sizeof(buf));
+	memset(buf, 0, SIZEBUF);
     sprintf(buf,"end of file");
 	//end of file 을 전송
-	if (send(sd, buf, sizeof(buf), 0) == -1){
+	if (send(sd, buf, SIZEBUF, 0) == -1){
 		perror("send filena?me");
 		exit(1);
 	}
 
 
 	// end of file 확인
-	bytes_read = (recv(sd, end_buf, 12, 0));
+	bytes_read = (recv(sd, end_buf, SIZEBUF, 0));
 
 	if (bytes_read == -1) {
 		perror("recv end of file");
@@ -124,25 +124,25 @@ int main(int argc, char** argv) {
 	}
 
 	//file 내용을 다시 전송
-	while ((n = read(fd1, buf, sizeof(buf))) > 0){ //fd에 있는걸 buf로 저장
+	while ((n = read(fd1, buf, SIZEBUF)) > 0){ //fd에 있는걸 buf로 저장
 
 		printf("RESEND : %d\n", n);
 
-		if (send(sd, buf, sizeof(buf), 0) == -1) {
+		if (send(sd, buf, SIZEBUF, 0) == -1) {
 			perror("resendto");
 			exit(1);
 		}
-        memset(buf,0,256);
+		memset(buf, 0, SIZEBUF);
 	}
-    memset(buf,0,sizeof(buf));
+	memset(buf, 0, SIZEBUF);
     sprintf(buf,"end of file");
 	//파일끝이라고 전송
-	if (send(sd, buf, sizeof(buf), 0) == -1){
+	if (send(sd, buf, SIZEBUF, 0) == -1){
 		perror("send filena?me");
 		exit(1);
 	}
 	// end of file 확인
-	bytes_read = (recv(sd, end_buf, 20, 0));
+	bytes_read = (recv(sd, end_buf, SIZEBUF, 0));
 
 	if (bytes_read == -1) {
 		perror("recv end of file");
@@ -157,9 +157,9 @@ int main(int argc, char** argv) {
 	}
 	//여긴 머냐
 	//만약 일치 불일치 메세지 를 받는다.
-	memset(percent, 0, sizeof(percent));
+	memset(percent, 0, SIZEBUF);
 	printf("불일치 사이즈: %d\n", bytes_read);
-	bytes_read = recv(sd, percent, 50, 0);
+	bytes_read = recv(sd, percent, SIZEBUF, 0);
 	percent[bytes_read] = '\0';
 	printf("불일치 사이즈: %d\n", bytes_read);
 	printf("%s 퍼센트 가 무엇인지 출력\n", percent);

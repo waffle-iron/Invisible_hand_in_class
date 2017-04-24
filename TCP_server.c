@@ -14,17 +14,16 @@
 #include "library.h"
 
 #define PORTNUM 9000
-#define BUFFERSIZE 256
 
 int main() {
-	char buf[256];
+	char buf[SIZEBUF];
 	const char* filename;
 	struct sockaddr_in sin, cli;
 	int sd = 0, ns = 0;
 	socklen_t clientlen = sizeof(cli);
 
 	mkdir("temp", 0777);
-    printf("%d\n",BUFSIZ);
+ 
 	FILE *fd, *o_fd;
 	close(sd);
 	close(ns);
@@ -56,14 +55,14 @@ int main() {
 			exit(1);
 		}
 
-		if (recv(ns, buf, 256, 0) == -1){
+		if (recv(ns, buf, SIZEBUF, 0) == -1){
 			perror("recv filename");
 			exit(1);
 		}
 
 		filename = buf;
 
-		if (send(ns, buf, strlen(buf) + 1, 0) == -1) {
+		if (send(ns, buf, SIZEBUF, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
@@ -72,17 +71,17 @@ int main() {
 			perror("file fail");
 
 
-		char finalFile[248] = "./temp/";
+		char finalFile[SIZEBUF] = "./temp/";
 		strcat(finalFile, filename);
 		printf("%s", finalFile);
 
 		// 정현 - 파일내용 받는곳 같음
 		while (1) {
 
-			memset(buf, 0, sizeof(buf));
+			memset(buf, 0, SIZEBUF);
 //			printf("2while\n");
 			int bytes_read =0;
-            bytes_read = recv(ns, buf, 256, 0);
+			bytes_read = recv(ns, buf, SIZEBUF, 0);
             printf("RECV : %d\n",bytes_read);
             printf("buf = %s\n",buf);
 //			printf("3while\n");
@@ -95,15 +94,15 @@ int main() {
 			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
 				printf("file close\n");
 				fclose(fd);
-				char writeBuffer[256];
+				char writeBuffer[SIZEBUF];
 				o_fd = fopen(finalFile, "w+");
 				if (o_fd == NULL)  perror("file fail");
 
 				fd = fopen("temp.dat", "r");
 
-				memset(writeBuffer, 0, sizeof(writeBuffer));
+				memset(writeBuffer, 0, SIZEBUF);
 
-				while (fgets(writeBuffer, sizeof(writeBuffer), fd) != NULL)
+				while (fgets(writeBuffer, SIZEBUF, fd) != NULL)
 					fprintf(o_fd, "%s", writeBuffer);
 
 
@@ -118,7 +117,7 @@ int main() {
 				//
 				//파일 끝 받았다고 전송
 
-				if (send(ns, "end of file", strlen("end of file") + 1, 0) == -1){
+				if (send(ns, "end of file", SIZEBUF, 0) == -1){
 					perror("send end of file");
 					exit(1);
 				}
@@ -135,9 +134,9 @@ int main() {
 		o_fd = fopen(finalFile, "w+");
 		while (1) {
 
-			memset(buf, 0, sizeof(buf));
+			memset(buf, 0, SIZEBUF);
 			printf("무결성2while\n");
-			int bytes_read = recv(ns, buf, 256, 0);
+			int bytes_read = recv(ns, buf, SIZEBUF, 0);
 			printf("무결성3while\n");
 			if (bytes_read == -1) {
 				perror("recv date");
@@ -151,13 +150,13 @@ int main() {
 					exit(1);
 				}
 
-				char checkBuffer_1[256];
-				char checkBuffer_2[256];
-				memset(checkBuffer_1, 0, sizeof(checkBuffer_1));
-				memset(checkBuffer_2, 0, sizeof(checkBuffer_2));
+				char checkBuffer_1[SIZEBUF];
+				char checkBuffer_2[SIZEBUF];
+				memset(checkBuffer_1, 0, SIZEBUF);
+				memset(checkBuffer_2, 0, SIZEBUF);
 
-				while (fgets(checkBuffer_1, sizeof(checkBuffer_1), fd) != NULL){//다시 받아온 파일 데이터
-					fgets(checkBuffer_2, sizeof(checkBuffer_2), fd);//원본 파일 데이터
+				while (fgets(checkBuffer_1, SIZEBUF, fd) != NULL){//다시 받아온 파일 데이터
+					fgets(checkBuffer_2, SIZEBUF, fd);//원본 파일 데이터
 					if (!strcmp(checkBuffer_1, checkBuffer_2)){
 						perror("file check fail");
 						exit(1);
@@ -166,7 +165,7 @@ int main() {
 				fclose(fd);
 				fclose(o_fd);
 				printf("send전입니다\n");
-				if (send(ns, "100percent", strlen("100percent") + 1, 0) == -1){
+				if (send(ns, "100percent", SIZEBUF, 0) == -1){
 					perror("send 100");
 					exit(1);
 				}
@@ -176,7 +175,7 @@ int main() {
 			} else {
 				printf("%d byte recv\n", bytes_read);
 				//			    fputs(buf, stream); //파일로 저장
-				fwrite(buf, sizeof(char), 255, fd);
+				fwrite(buf, sizeof(char), SIZEBUF, fd);
 			}
 		}
 		int removeTempFile = remove("./temp.dat");
