@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 			perror("sendto");
 			exit(1);
 		}
-        printf("buf = %s\n",buf); 
+        //printf("buf = %s\n",buf); 
         memset(buf,0,256);
 	}
 
@@ -111,11 +111,11 @@ int main(int argc, char** argv) {
 
 	///////////////////////////////////////////////////////////
 	//////// 무결성 체크/////////////////////////////////////////////
-	printf("resend if you want to check whether your file is correct send\n");
+	printf(" check whether your file is correct send\n");
 
 	sleep(2);
 	//scanf("%s", &filename);
-	printf("%s\n", filename);
+	//printf("%s\n", filename);
 	//file open
 	int fd1;
 	fd1 = open(filename, O_RDONLY);
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (strcmp("end of file", end_buf) == 0) { //buf랑 비교
-		printf("여기디이빈다 : %s\n", end_buf);
+		//printf("여기디이빈다 : %s\n", end_buf);
 	} else{
 		perror("error : file is not end");
 		exit(1);
@@ -159,11 +159,11 @@ int main(int argc, char** argv) {
 	//여긴 머냐
 	//만약 일치 불일치 메세지 를 받는다.
 	memset(percent, 0, SIZEBUF+1);
-	printf("불일치 사이즈: %d\n", bytes_read);
+//	printf("불일치 사이즈: %d\n", bytes_read);
 	bytes_read = recv(sd, percent, SIZEBUF, 0);
 	//percent[bytes_read] = '\0';
-	printf("불일치 사이즈: %d\n", bytes_read);
-	printf("%s 퍼센트 가 무엇인지 출력\n", percent);
+	//printf("불일치 사이즈: %d\n", bytes_read);
+	//printf("%s 퍼센트 가 무엇인지 출력\n", percent);
 	//만약 불일치라면 소켓을 닫는다
 	if (strcmp("100percent", percent) == 0) { //buf랑 비교
 		printf("%s same file\n", percent);
