@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
 		printf("SEND : %d\n", n);
 
-		if (send(sd, buf, n, 0) == -1) {
+		if (send(sd, buf, strlen(buf), 0) == -1) {
 			perror("sendto");
 			exit(1);
 		}
@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
 	///////////////////////////////////////////////////////////
 	//////// 무결성 체크/////////////////////////////////////////////
 	printf("resend if you want to check whether your file is correct send\n");
-	
+
 	sleep(2);
 	//scanf("%s", &filename);
 	printf("%s\n", filename);
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
 		perror("error : file is not end");
 		exit(1);
 	}
-	//여긴 머냐 
+	//여긴 머냐
 	//만약 일치 불일치 메세지 를 받는다.
 	memset(percent, 0, sizeof(percent));
 	printf("불일치 사이즈: %d\n", bytes_read);
