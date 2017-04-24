@@ -16,7 +16,7 @@
 #define PORTNUM 9000
 
 int main() {
-	char buf[SIZEBUF];
+	char buf[SIZEBUF+1];
 	const char* filename;
 	struct sockaddr_in sin, cli;
 	int sd = 0, ns = 0;
@@ -73,15 +73,17 @@ int main() {
 
 		char finalFile[SIZEBUF] = "./temp/";
 		strcat(finalFile, filename);
-		printf("%s", finalFile);
+		printf("%s\n", finalFile);
 
 		// 정현 - 파일내용 받는곳 같음
 		while (1) {
-
+			printf("finaleFIle1 = %s\n", finalFile);
 			memset(buf, 0, SIZEBUF);
+			printf("finaleFIle = %s\n", finalFile);
 //			printf("2while\n");
-			int bytes_read =0;
+			int bytes_read = 0;
 			bytes_read = recv(ns, buf, SIZEBUF, 0);
+			printf("finalerecv밑이다 = %s\n", finalFile);
             printf("RECV : %d\n",bytes_read);
             printf("buf = %s\n",buf);
 //			printf("3while\n");
@@ -90,11 +92,12 @@ int main() {
 				exit(1);
 			}
 			buf[bytes_read] = '\0';
-
+			printf("finaleFIle2 = %s\n", finalFile);
 			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
 				printf("file close\n");
 				fclose(fd);
 				char writeBuffer[SIZEBUF];
+				printf("%s finaleFIle \n", finalFile);
 				o_fd = fopen(finalFile, "w+");
 				if (o_fd == NULL)  perror("file fail");
 
