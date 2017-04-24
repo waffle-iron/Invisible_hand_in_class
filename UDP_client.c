@@ -106,9 +106,9 @@ int main(int argc, char** argv){
 
 	///////////////////////////////////////////////////////////
 	//////// 무결성 체크/////////////////////////////////////////////
-	printf("resend if you want to check whether your file is correct send\n");
+	printf("check whether your file is correct send\n");
 	sleep(2);
-	scanf("file : %s", &filename);
+	//scanf("file : %s", &filename);
 	close(fd);
 	//file open
 	int fd1;

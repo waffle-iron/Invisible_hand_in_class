@@ -85,10 +85,12 @@ int main(){
 		while (1) {
 
 			memset(buf, 0, sizeof(buf));
-			printf("2while\n");
+			//printf("2while\n");
 
 			bytes_read = recvfrom(sd, buf, 255, 0, (struct sockaddr *)&sin, &clientlen);
-			printf("3while\n");
+			printf("RECV : %d byte\n",bytes_read);
+
+			//printf("3while\n");
 			if (bytes_read == -1) {
 				perror("recvfrom date");
 				exit(1);
@@ -138,10 +140,12 @@ int main(){
 		while (1) {
 
 			memset(buf, 0, sizeof(buf));
-			printf("2while\n");
+			//printf("2while\n");
 
 			bytes_read = recvfrom(sd, buf, 255, 0, (struct sockaddr *)&sin, &clientlen);
-			printf("3while\n");
+			printf("RECV : %d byte\n",bytes_read);
+
+			//printf("3while\n");
 			if (bytes_read == -1) {
 				perror("recvfrom date");
 				exit(1);
@@ -182,8 +186,8 @@ int main(){
 				fclose(o_fd);
 				break; //while문 빠져나가기
 			} else {
-				//printf("%d byte recv: %s\n", bytes_read, buf);
-				//			    fputs(buf, stream); //파일로 저장
+				printf("Ingridty : %d byte \n", bytes_read);
+
 				fprintf(fd, "%s", buf);
 			}
 		}

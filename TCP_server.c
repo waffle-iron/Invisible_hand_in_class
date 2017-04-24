@@ -32,7 +32,7 @@ int main() {
 	socklen_t clientlen = sizeof(cli);
 
 	mkdir("temp", 0777);
- 
+
 	FILE *fd, *o_fd;
 	close(sd);
 	close(ns);
@@ -86,9 +86,7 @@ int main() {
 
 		// 정현 - 파일내용 받는곳 같음
 		while (1) {
-//			printf("finaleFIle1 = %s\n", finalFile);
 			memset(buf, 0, SIZEBUF);
-//			printf("finaleFIle = %s\n", finalFile);
 //			printf("2while\n");
 			int bytes_read = 0;
 			bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL);
@@ -181,7 +179,7 @@ int main() {
 					perror("send 100");
 					exit(1);
 				}
-				
+
 			//	printf("send후\n");
 				break;
 			} else {

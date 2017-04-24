@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 			perror("sendto");
 			exit(1);
 		}
-        //printf("buf = %s\n",buf); 
+        //printf("buf = %s\n",buf);
         memset(buf,0,256);
 	}
 
@@ -159,7 +159,6 @@ int main(int argc, char** argv) {
 	//여긴 머냐
 	//만약 일치 불일치 메세지 를 받는다.
 	memset(percent, 0, SIZEBUF+1);
-//	printf("불일치 사이즈: %d\n", bytes_read);
 	bytes_read = recv(sd, percent, SIZEBUF, 0);
 	//percent[bytes_read] = '\0';
 	//printf("불일치 사이즈: %d\n", bytes_read);
