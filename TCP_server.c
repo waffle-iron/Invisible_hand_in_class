@@ -105,17 +105,20 @@ int main() {
 			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
 				printf("file close\n");
 				fclose(fd);
-				char writeBuffer[SIZEBUF];
-				printf("%s finaleFIle \n", finalFile);
-				o_fd = fopen(finalFile, "w+");
+				char writeBuffer[SIZEBUF+1];
+				printf("%s,finaleFIle \n", finalFile);
+				o_fd = fopen(finalFile, "w");
 				if (o_fd == NULL)  perror("file fail");
-
-				fd = fopen("temp.dat", "r");
-
+				
+				fd = fopen("./temp.dat", "rb");
+				if (fd == NULL) perror("temp fail");
 				memset(writeBuffer, 0, SIZEBUF);
 
-				while (fgets(writeBuffer, SIZEBUF, fd) != NULL)
-					fprintf(o_fd, "%s", writeBuffer);
+				while (fgets(writeBuffer, SIZEBUF, fd) != NULL){
+					printf("%s \n", writeBuffer);
+					fputs(writeBuffer, o_fd);
+				}
+					
 
 
 
@@ -142,8 +145,8 @@ int main() {
 		}
 		//무결성 체크
 		printf("무결성 체크\n");
-		fd = fopen("temp2.dat", "w+");//fd2 다시 연다
-		o_fd = fopen(finalFile, "w+");
+		fd = fopen("temp2.dat", "w");//fd2 다시 연다
+		o_fd = fopen(finalFile, "r");
 		while (1) {
 
 			memset(buf, 0, SIZEBUF);
@@ -168,7 +171,7 @@ int main() {
 				memset(checkBuffer_2, 0, SIZEBUF);
 
 				while (fgets(checkBuffer_1, SIZEBUF, fd) != NULL){//다시 받아온 파일 데이터
-					fgets(checkBuffer_2, SIZEBUF, fd);//원본 파일 데이터
+					fgets(checkBuffer_2, SIZEBUF, o_fd);//원본 파일 데이터
 					if (!strcmp(checkBuffer_1, checkBuffer_2)){
 						perror("file check fail");
 						exit(1);
