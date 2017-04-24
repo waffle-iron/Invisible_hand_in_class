@@ -17,7 +17,6 @@ int main(int argc, char** argv){
 	sin.sin_port = htons(PORTNUM);
 	sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	//printf("connect() : 클라이언트와 연결을 시킨다\n");
 	if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 
 		perror("bind");
