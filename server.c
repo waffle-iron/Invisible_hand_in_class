@@ -1,7 +1,6 @@
 #include "library.h"
 
 int main(int argc, char** argv){
-
 	char buf[256];
 	struct sockaddr_in sin, cli;
 	int sd;
@@ -11,7 +10,6 @@ int main(int argc, char** argv){
 		perror("socket");
 		exit(1);
 	}
-
 	memset((char *)&sin, '\0', sizeof(sin));
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(PORTNUM);
@@ -22,16 +20,14 @@ int main(int argc, char** argv){
 		perror("bind");
 		exit(1);
 	}
-
 	while (1) {
 		if ((recvfrom(sd, buf, SIZEBUF, 0,
 			(struct sockaddr *)&cli, &clientlen)) == -1) {
 				perror("recvfrom");
 				exit(1);
 			}
-
-			if(!strcmp(buf, "UDP") || !strcmp(buf, "udp") ||
-				!strcmp(buf, "TCP") || !!strcmp(buf, "tcp")){
+			if(!strcmp(buf, "UDP") && !strcmp(buf, "udp") &&
+				!strcmp(buf, "TCP") && !!strcmp(buf, "tcp")){
 					return 0;
 				}
 			if(strcmp(buf, "UDP") || strcmp(buf, "udp") ){

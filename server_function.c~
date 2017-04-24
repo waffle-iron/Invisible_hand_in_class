@@ -98,7 +98,7 @@ void UdpServer(){
 					gettimeofday(&end_point, NULL);
 					stat(buf, &inf_file);
 					int file_size=inf_file.st_size;
-					double timer = File_transfer_speed(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
+					double timer = File_transfer_speed(start_point._tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
 					printf("%f Byte",(double)file_size/timer);
 					if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
 						perror("sendto end of file");
