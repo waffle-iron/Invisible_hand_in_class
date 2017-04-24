@@ -19,12 +19,12 @@
 
 #define SIZEBUF 1024
 #define PORTNUM 9000
-void UdpClient(int argc, char** argv);
+void UdpClient(int argc, char** argv, int sd,	struct sockaddr_in sin);
 void UdpServer();
 void TcpClient(int argc, char** argv);
 void TcpServer();
 
-typedef struct _file_information{	//±¸Á¶Ã¼
+typedef struct _file_information{	//ï¿½ï¿½ï¿½ï¿½Ã¼
 	struct dirent dent;
 	char or_file_dir;
 }file_information;

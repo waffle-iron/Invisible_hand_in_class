@@ -9,57 +9,62 @@ int compare_file_name(const void* f_a, const void* f_b){
 	return result;
 }
 void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name){
-	
+
 	int fd, n;
 	int bytes_read;
 	char buf[SIZEBUF];
 	char temp_file_name[SIZEBUF];
-	// ÆÄÀÏÀÌ¶ó´Â °ÍÀ» ¼­¹ö¿¡°Ô ¾Ë¸²
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
+
 	if (sendto(sd, "This is File", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
 
-	// ÆÄÀÏÀÌ¶ó´Â °ÍÀ» ¼­¹ö°¡ ÀÎ½ÄÇÏ°í º¸³½ ¸Þ½ÃÁö
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom isfile");
 		exit(1);
 	}
+	printf("3\n");
 
 	memset(buf, 0, SIZEBUF);
 	sprintf(temp_file_name, "./save/%s", file_name);
-	// ÆÄÀÏ ÀÌ¸§ Àü¼Û
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+
 	if (sendto(sd, temp_file_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
 
-	//ÆÄÀÏÀÌ¸§ ¹Þ±â
-	//¼­¹ö¿¡¼­ ÆÄÀÏÀ» ¹ÞÀºÈÄ Å¬¶óÀÌ¾ðÆ®¿¡°Ô ´Ù½Ã ÆÄÀÏ ¸íÀ» Àü¼ÛÇÔ
-	//buf·Î µ¥ÀÌÅ¸¸¦ ÀÐ¾îµéÀÌ°Ô µÈ´Ù
+
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½Þ±ï¿½
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	//bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½È´ï¿½
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom filename");
 		exit(1);
 	}
+	printf("%s\n", buf);
 
-	//³»°¡ º¸³½ ÆÄÀÏÀÌ¶û ÀÌ¸§ÀÌ ´Ù¸¥°æ¿ì
-	//if (strcmp(filename, buf) != 0) { //buf¶û ºñ±³
+
+	//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ï¿½ï¿½ï¿½ï¿½
+	//if (strcmp(filename, buf) != 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	//	printf("%s\n", buf);
 	//	perror("not match filename.");
 	//	exit(1);
 	//} else {
-	//	// ÆÄÀÏÀÌ¸§ ¹Þ°íÃâ·Â
+	//	// ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½Þ°ï¿½ï¿½ï¿½ï¿½ï¿½
 	//	printf("** match filename : %s\n", buf);
 	//}
-
-	// ÆÄÀÏ¿­±â
-	if ((fd = open(buf, O_RDONLY)) == -1){
+	// ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½
+	if ((fd = open(file_name, O_RDONLY)) == -1){
 		perror("file open fail");
 		exit(1);
 	}
 
-	//file ³»¿ëÀ» Àü¼Û
-	while ((n = read(fd, buf, SIZEBUF)) > 0){ //fd¿¡ ÀÖ´Â°É buf·Î ÀúÀå
+	//file ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	while ((n = read(fd, buf, SIZEBUF)) > 0){ //fdï¿½ï¿½ ï¿½Ö´Â°ï¿½ bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 		printf("SEND : %d\n", n);
 
@@ -71,21 +76,21 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 
 	memset(buf, 0, SIZEBUF);
 
-	//sprintf(buf, "end of file"); //buf¿¡´Ù°¡ end of fileÀ» ºÙÀÌ´Â °Í
-	//end of file À» Àü¼Û
+	//sprintf(buf, "end of file"); //bufï¿½ï¿½ï¿½Ù°ï¿½ end of fileï¿½ï¿½ ï¿½ï¿½ï¿½Ì´ï¿½ ï¿½ï¿½
+	//end of file ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
 
 
-	// end of file È®ÀÎ
+	// end of file È®ï¿½ï¿½
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom end of file");
 		exit(1);
 	}
 
-	if (strcmp("end of file", buf) == 0) { //buf¶û ºñ±³
+	if (strcmp("end of file", buf) == 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		printf("%s\n", buf);
 	} else{
 		perror("error : file is not end");
@@ -96,132 +101,138 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* Dir_name){
 	DIR *dp;
 	struct dirent *dent;
-	//index : µð·ºÅä¸®¾È ÆÄÀÏ¹× µð·ºÅä¸®°³¼ö
+	//index : ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½ï¿½ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ï¿½ï¿½
 	int index = 0;
 	int bytes_read;
 	int	files_number = 2000;
 	char buf[SIZEBUF];
 	char temp_dirent_name[2000] = { 0, };
-	char* cwd; 
+	char temp_Dir_name[SIZEBUF];
+	char* cwd;
 	struct stat sbuf;
 
-	// µð·ºÅä¸®¶ó´Â °ÍÀ» ¼­¹ö¿¡°Ô ¾Ë¸²
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
 	if (sendto(sd, "This is DIR", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto DIR");
 		exit(1);
 	}
-
-	// µð·ºÅä¸®ÀÌ¶ó´Â °ÍÀ» ¼­¹ö°¡ ÀÎ½ÄÇÏ°í º¸³½ ¸Þ½ÃÁö
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½Ì¶ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom isDIR");
 		exit(1);
 	}
+	printf("%s\n",Dir_name);
 
 	memset(buf, 0, SIZEBUF);
 
-	// µð·ºÅä¸® ÀÌ¸§ Àü¼Û
-	if (sendto(sd, Dir_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ä¸® ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+	/*if (sendto(sd, Dir_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto DIRname");
+		exit(1);
+	}*/
+	sprintf(temp_Dir_name, "./save/%s", Dir_name);
+	printf("ì—¬ê¸°ìš” %s\n",temp_Dir_name);
+	if (sendto(sd, temp_Dir_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("sendto DDDename");
 		exit(1);
 	}
 
-	// µð·ºÅä¸®ÀÌ¸§ ¹Þ±â
-	//¼­¹ö¿¡¼­ ÆÄÀÏÀ» ¹ÞÀºÈÄ Å¬¶óÀÌ¾ðÆ®¿¡°Ô ´Ù½Ã ÆÄÀÏ ¸íÀ» Àü¼ÛÇÔ
-	//buf·Î µ¥ÀÌÅ¸¸¦ ÀÐ¾îµéÀÌ°Ô µÈ´Ù
-	
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½Ì¸ï¿½ ï¿½Þ±ï¿½
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	//bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½È´ï¿½
+
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom DIRname");
 		exit(1);
 	}
-
+printf("%s  ss  ",buf);
 	if ((dp = opendir(Dir_name)) == NULL) {
 		perror("opendir");
 		exit(1);
 	}
 	memset(buf, 0, SIZEBUF);
 	file_information* files = (file_information*)malloc(sizeof(file_information) * files_number);
-	//ÀÐÀ¸¸é¼­ files ¹è¿­¿¡ ÀúÀå
+	//ï¿½ï¿½ï¿½ï¿½ï¿½é¼­ files ï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	while ((dent = readdir(dp))){
 		if (index >= files_number - 2){
 			files_number *= 2;
 			files = (file_information*)realloc((void*)files, sizeof(file_information) * files_number);
 		}
-		// ÀÌ¸§½ÃÀÛÀÌ .ÀÏ°æ¿ì °è¼ÓÁøÇà
+		// ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ .ï¿½Ï°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
 		}
 		if (strcmp(dent->d_name, "..") == 0){
 			continue;
 		}
-		//Á¤º¸¸¦ files¹è¿­¿¡ ÀúÀå
-		stat(dent->d_name, &sbuf);
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ filesï¿½è¿­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		sprintf(temp_Dir_name, "%s/%s",Dir_name ,dent->d_name);
+		if( stat(temp_Dir_name, &sbuf) ==-1 ){
+			perror("stat");
+			exit;
+		}
 		files[index].dent = *dent;
-		//µð·ºÅä¸® ÀÎ°æ¿ì
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ä¸® ï¿½Î°ï¿½ï¿½ï¿½
+		//printf("sbuf.st_mode = %x",sbuf.st_mode);
+
 		if (S_ISDIR(sbuf.st_mode)){
+			printf("d\n");
 			files[index].or_file_dir = 'd';
 		} else if (S_ISREG(sbuf.st_mode)){
-			//ÆÄÀÏÀÎ °æ¿ì
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+			printf("f\n");
 			files[index].or_file_dir = 'f';
 		}
 		index++;
 	}
-
+	printf("he\n");
 	qsort(files, index, sizeof(file_information), compare_file_name);
 
 	int i = 0;
 	for (i = 0; i < index; ++i){
-		if (files[i].or_file_dir = 'f'){
-			UdpFileTrans(sd, sin, add_len, files[i].dent.d_name);
-		} else if (files[i].or_file_dir = 'd'){
+		printf("temp = %s\n",temp_Dir_name);
+		sprintf(temp_Dir_name, "%s/%s",Dir_name ,files[i].dent.d_name);
+		if (files[i].or_file_dir == 'f'){
+			UdpFileTrans(sd, sin, add_len, temp_Dir_name);
+		} else if (files[i].or_file_dir == 'd'){
 			char temp[2] = { '/', '\0' };
-			//µð·ºÅä¸® °æ·Î Ãâ·ÂÇÏ±â À§ÇØ º¯¼ö¿¡ ÀúÀå
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			sprintf(temp_dirent_name, "%s%s%s", Dir_name, temp, files[i].dent.d_name);
-			//È°µ¿ µð·ºÅä¸® ÀúÀå
+			//È°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ä¸® ï¿½ï¿½ï¿½ï¿½
+
 			cwd = getcwd(NULL, SIZEBUF);
-			//ÇÏÀ§ µð·ºÅä¸®·Î ÀÌµ¿ÈÄ Ãâ·Â
+			//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			chdir(files[i].dent.d_name);
 			UdpDirTrans(sd, sin, add_len, temp_dirent_name);
-			//´Ù½Ã È°µ¿ µð·ºÅä¸®·Î º¹±Í
+			//ï¿½Ù½ï¿½ È°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			chdir(cwd);
 		}
 	}
 
 }
 
-//Ã¹¹øÂ° ½ÇÇàÇÁ·Î±×·¥ / IP / Àü¼ÛÇÒ µð·ºÅä¸® or ÆÄÀÏ 
-void UdpClient(int argc, char** argv){
+//Ã¹ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î±×·ï¿½ / IP / ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ä¸® or ï¿½ï¿½ï¿½ï¿½
+void UdpClient(int argc, char** argv, int sd,	struct sockaddr_in sin){
 
-	int sd;// , fd, n;
+	// , fd, n;
 		struct stat buf;
 		//char end_buf[SIZEBUF];
 		//char re_buf[SIZEBUF];
 
-		struct sockaddr_in sin;
 		socklen_t add_len = sizeof(struct sockaddr);
 
-		// socket open
-		if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-			perror("socket");
-			exit(1);
-		}
-
-		// init
-		memset((char *)&sin, '\0', sizeof(sin));
-		sin.sin_family = AF_INET;
-		sin.sin_addr.s_addr = inet_addr(argv[1]);
-		sin.sin_port = htons(PORTNUM);
 
 		stat(argv[2], &buf);
-		// µð·ºÅä¸® ÀÎ°æ¿ì 
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ä¸® ï¿½Î°ï¿½ï¿½ï¿½
 		if (S_ISDIR(buf.st_mode)){
-			printf("µð·ºÅä¸®ÀÔ´Ï´Ù.\n");
+			printf("ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½Ô´Ï´ï¿½.\n");
 			UdpDirTrans(sd, sin, add_len, argv[2]);
 		} else if (S_ISREG(buf.st_mode)){
-			//ÀÔ·ÂÇÑ°Ô ÆÄÀÏÀÏ °æ¿ì
-			printf("ÆÄÀÏÀÔ´Ï´Ù.\n");
+			//ï¿½Ô·ï¿½ï¿½Ñ°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+			printf("ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.\n");
 		UdpFileTrans(sd, sin, add_len, argv[2]);
 	} else{
-		//ÆÄÀÏ ¹× µð·ºÅä¸®µµ ¾Æ´Ñ °æ¿ì ¿¡·¯Ãâ·Â
+		//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½Æ´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		printf("myls: cannot access %s: No such file or directory\n", argv[2]);
 		exit(1);
 	}
@@ -229,7 +240,7 @@ void UdpClient(int argc, char** argv){
 
 
 	///////////////////////////////////////////////////////////
-	//////// ¹«°á¼º Ã¼Å©/////////////////////////////////////////////
+	//////// ï¿½ï¿½ï¿½á¼º Ã¼Å©/////////////////////////////////////////////
 	//printf("check whether your file is correct send\n");
 	//sleep(2);
 	////scanf("file : %s", &filename);
@@ -242,8 +253,8 @@ void UdpClient(int argc, char** argv){
 	//	exit(1);
 	//}
 
-	////file ³»¿ëÀ» ´Ù½Ã Àü¼Û
-	//while ((n = read(fd1, buf, 255)) > 0){ //fd¿¡ ÀÖ´Â°É buf·Î ÀúÀå
+	////file ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//while ((n = read(fd1, buf, 255)) > 0){ //fdï¿½ï¿½ ï¿½Ö´Â°ï¿½ bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 	//	printf("RESEND : %d\n", n);
 
@@ -258,25 +269,25 @@ void UdpClient(int argc, char** argv){
 	//}
 
 
-	//// end of file È®ÀÎ
+	//// end of file È®ï¿½ï¿½
 	//bytes_read = (recvfrom(sd, end_buf, 12, 0, (struct sockaddr *)&sin, &add_len));
 	//if (bytes_read == -1) {
 	//	perror("recvfrom end of file");
 	//	exit(1);
 	//}
 
-	//if (strcmp("end of file", end_buf) == 0) { //buf¶û ºñ±³
+	//if (strcmp("end of file", end_buf) == 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	//	printf("%s\n", end_buf);
 	//} else{
 	//	perror("error : file is not end");
 	//	exit(1);
 	//}
 
-	////¸¸¾à ÀÏÄ¡ ºÒÀÏÄ¡ ¸Þ¼¼Áö ¸¦ ¹Þ´Â´Ù.
+	////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½Ä¡ ï¿½Þ¼ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ´Â´ï¿½.
 	//bytes_read = (recvfrom(sd, re_buf, 20, 0, (struct sockaddr *)&sin, &add_len));
 
-	////¸¸¾à ºÒÀÏÄ¡¶ó¸é ¼ÒÄÏÀ» ´Ý´Â´Ù
-	//if (strcmp("100%%", re_buf) == 0) { //buf¶û ºñ±³
+	////ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý´Â´ï¿½
+	//if (strcmp("100%%", re_buf) == 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	//	printf("%s same file\n", re_buf);
 	//} else{
 	//	perror("error : file is not same");
@@ -292,7 +303,7 @@ void TcpClient(int argc, char** argv){
 	char end_buf[SIZEBUF];
 	char percent[SIZEBUF + 1];
 	struct sockaddr_in sin;
-	const char* filename = argv[2]; //ÆÄÀÏ ÀÌ¸§
+	const char* filename = argv[2]; //ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½
 	printf("%s\n", filename);
 
 
@@ -300,7 +311,7 @@ void TcpClient(int argc, char** argv){
 		perror("socket");
 		exit(1);
 	}
-	// ÃÊ±âÈ­ 
+	// ï¿½Ê±ï¿½È­
 	memset((char *)&sin, '\0', sizeof(sin));
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(PORTNUM);
@@ -317,14 +328,14 @@ void TcpClient(int argc, char** argv){
 		exit(1);
 	}
 
-	// ÆÄÀÏ ÀÌ¸§ Àü¼Û
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (send(sd, filename, SIZEBUF, 0) == -1){
 		perror("send filename");
 		exit(1);
 	}
 
 
-	//ÆÄÀÏ ¸í ´Ù½Ã ¹Þ±â
+	//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Þ±ï¿½
 	int bytes_read = (recv(sd, buf, SIZEBUF, MSG_WAITALL));
 
 	if (bytes_read < 0) {
@@ -332,16 +343,16 @@ void TcpClient(int argc, char** argv){
 		exit(1);
 	}
 
-	//³»°¡ º¸³½ ÆÄÀÏÀÌ¶û ÀÌ¸§ÀÌ ´Ù¸¥°æ¿ì
-	if (strcmp(filename, buf) != 0) { //buf¶û ºñ±³
+	//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì¶ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ï¿½ï¿½ï¿½ï¿½
+	if (strcmp(filename, buf) != 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		printf("%s\n", buf);
 		perror("not match filename.");
 		exit(1);
-	} else printf("** match filename : %s\n", buf);// ÆÄÀÏÀÌ¸§ ¹Þ°íÃâ·Â
+	} else printf("** match filename : %s\n", buf);// ï¿½ï¿½ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½Þ°ï¿½ï¿½ï¿½ï¿½ï¿½
 
 
-	//file ³»¿ëÀ» Àü¼Û
-	while ((n = read(fd, buf, SIZEBUF)) > 0){ //fd¿¡ ÀÖ´Â°É buf·Î ÀúÀå
+	//file ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	while ((n = read(fd, buf, SIZEBUF)) > 0){ //fdï¿½ï¿½ ï¿½Ö´Â°ï¿½ bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 		printf("SEND : %d\n", n);
 		int a = send(sd, buf, SIZEBUF, 0);
@@ -356,14 +367,14 @@ void TcpClient(int argc, char** argv){
 
 	memset(buf, 0, SIZEBUF);
 	sprintf(buf, "end of file");
-	//end of file À» Àü¼Û
+	//end of file ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (send(sd, buf, SIZEBUF, 0) == -1){
 		perror("send filena?me");
 		exit(1);
 	}
 
 
-	// end of file È®ÀÎ
+	// end of file È®ï¿½ï¿½
 	bytes_read = (recv(sd, end_buf, SIZEBUF, MSG_WAITALL));
 
 	if (bytes_read == -1) {
@@ -371,7 +382,7 @@ void TcpClient(int argc, char** argv){
 		exit(1);
 	}
 
-	if (strcmp("end of file", end_buf) == 0) { //buf¶û ºñ±³
+	if (strcmp("end of file", end_buf) == 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		printf("%s\n", end_buf);
 	} else{
 		perror("error : file is not end");
@@ -381,7 +392,7 @@ void TcpClient(int argc, char** argv){
 	close(fd);
 
 	///////////////////////////////////////////////////////////
-	//////// ¹«°á¼º Ã¼Å©/////////////////////////////////////////////
+	//////// ï¿½ï¿½ï¿½á¼º Ã¼Å©/////////////////////////////////////////////
 	printf(" check whether your file is correct send\n");
 
 	sleep(2);
@@ -395,8 +406,8 @@ void TcpClient(int argc, char** argv){
 		exit(1);
 	}
 
-	//file ³»¿ëÀ» ´Ù½Ã Àü¼Û
-	while ((n = read(fd1, buf, SIZEBUF)) > 0){ //fd¿¡ ÀÖ´Â°É buf·Î ÀúÀå
+	//file ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	while ((n = read(fd1, buf, SIZEBUF)) > 0){ //fdï¿½ï¿½ ï¿½Ö´Â°ï¿½ bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 		printf("RESEND : %d\n", n);
 
@@ -408,12 +419,12 @@ void TcpClient(int argc, char** argv){
 	}
 	memset(buf, 0, SIZEBUF);
 	sprintf(buf, "end of file");
-	//ÆÄÀÏ³¡ÀÌ¶ó°í Àü¼Û
+	//ï¿½ï¿½ï¿½Ï³ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	if (send(sd, buf, SIZEBUF, 0) == -1){
 		perror("send filena?me");
 		exit(1);
 	}
-	// end of file È®ÀÎ
+	// end of file È®ï¿½ï¿½
 	bytes_read = (recv(sd, end_buf, SIZEBUF, 0));
 
 	if (bytes_read == -1) {
@@ -421,21 +432,21 @@ void TcpClient(int argc, char** argv){
 		exit(1);
 	}
 
-	if (strcmp("end of file", end_buf) == 0) { //buf¶û ºñ±³
-		//printf("¿©±âµðÀÌºó´Ù : %s\n", end_buf);
+	if (strcmp("end of file", end_buf) == 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		//printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ìºï¿½ï¿½ï¿½ : %s\n", end_buf);
 	} else{
 		perror("error : file is not end");
 		exit(1);
 	}
-	//¿©±ä ¸Ó³Ä
-	//¸¸¾à ÀÏÄ¡ ºÒÀÏÄ¡ ¸Þ¼¼Áö ¸¦ ¹Þ´Â´Ù.
+	//ï¿½ï¿½ï¿½ï¿½ ï¿½Ó³ï¿½
+	//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½Ä¡ ï¿½Þ¼ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Þ´Â´ï¿½.
 	memset(percent, 0, SIZEBUF + 1);
 	bytes_read = recv(sd, percent, SIZEBUF, 0);
 	//percent[bytes_read] = '\0';
-	//printf("ºÒÀÏÄ¡ »çÀÌÁî: %d\n", bytes_read);
-	//printf("%s ÆÛ¼¾Æ® °¡ ¹«¾ùÀÎÁö Ãâ·Â\n", percent);
-	//¸¸¾à ºÒÀÏÄ¡¶ó¸é ¼ÒÄÏÀ» ´Ý´Â´Ù
-	if (strcmp("100percent", percent) == 0) { //buf¶û ºñ±³
+	//printf("ï¿½ï¿½ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: %d\n", bytes_read);
+	//printf("%s ï¿½Û¼ï¿½Æ® ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½\n", percent);
+	//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý´Â´ï¿½
+	if (strcmp("100percent", percent) == 0) { //bufï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		printf("%s same file\n", percent);
 	} else{
 		printf("error : file is not same\n");
