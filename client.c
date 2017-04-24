@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv){
 
-	int sd, fd, n;
+	int sd, fd;
 	char* choose;
 	char buf[256];
 
@@ -44,12 +44,10 @@ int main(int argc, char** argv){
 	}
 
 //choose 가 udp or tcp 인지 해서 server의 UdpServer() 또는 TcpServer()
-	if(choose = "UDP" || choose = "udp"){
-		UdpServer();
+	if(choose == "UDP" || choose == "udp"){
 		UdpClient(argc, argv);
 	}
-	else if (choose = "TCP" || choose = "tcp"){
-		TcpServer();
+	else if (choose == "TCP" || choose == "tcp"){
 		TcpClient(argc, argv);
 	}
 

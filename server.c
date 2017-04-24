@@ -3,10 +3,9 @@
 int main(int argc, char** argv){
 
 	char buf[256];
-	struct sockaddr_in sin;
+	struct sockaddr_in sin, cli;
 	int sd;
 	socklen_t  clientlen;
-	const char* filename;
 
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
@@ -32,6 +31,16 @@ int main(int argc, char** argv){
 				exit(1);
 			}
 
+			if(!strcmp(buf, "UDP") || !strcmp(buf, "udp") ||
+				!strcmp(buf, "TCP") || !!strcmp(buf, "tcp")){
+					return 0;
+				}
+			if(strcmp(buf, "UDP") || strcmp(buf, "udp") ){
+				UdpServer();
+			}
+			if(strcmp(buf, "TCP") || strcmp(buf, "tcp") ){
+				TcpServer();
+			}
 			//printf("** From Client : %s\n", buf);
 			strcpy(buf, "Start");
 
