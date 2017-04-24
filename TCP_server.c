@@ -125,7 +125,7 @@ int main() {
 			} else {
 //				printf("%d byte recv\n", bytes_read);
 				//			    fputs(buf, stream); //파일로 저장
-				fwrite(buf, sizeof(char), 256, fd);
+				fwrite(buf, sizeof(char), SIZEBUF, fd);
 			}
 		}
 		//무결성 체크
