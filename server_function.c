@@ -6,6 +6,13 @@ double File_transfer_speed(long start_tv_sec,long start_tv_usec,long end_tv_sec,
 	return (double)(end_tv_sec)+(double)(end_tv_usec)/1000000.0-(double)(start_tv_sec)-(double)(start_tv_usec)/1000000.0;
 }
 
+double File_transfer_speed(double timer){
+	struct stat inf_file;
+	stat(buf, &inf_file);
+	int file_size=inf_file.st_size;
+	return (double)file_size/timer;
+}
+
 void UdpServer(){
 
 	int sd;
@@ -14,7 +21,7 @@ void UdpServer(){
 	struct sockaddr_in sin;
 	socklen_t  clientlen = sizeof(sin);;
 	struct timeval start_point, end_point;
-	struct stat inf_file;
+	
 	//저장할 장소 생성
 	mkdir("save", 0644);
 
@@ -96,10 +103,10 @@ void UdpServer(){
 					//파일 끝 받았다고 전송
 
 					gettimeofday(&end_point, NULL);
-					stat(buf, &inf_file);
-					int file_size=inf_file.st_size;
-					double timer = File_transfer_speed(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
-					printf("%f Byte",(double)file_size/timer);
+		
+					
+					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
+					printf("%f Byte",File_transfer_speed(timer));
 					if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
 						perror("sendto end of file");
 						exit(1);
@@ -280,7 +287,7 @@ void TcpServer(){
 	const char* filename;
 	struct sockaddr_in sin, cli;
      struct timeval start_point, end_point;
-     struct stat inf_file;
+
 
 	int sd = 0, ns = 0;
 	socklen_t clientlen = sizeof(cli);
@@ -357,10 +364,9 @@ void TcpServer(){
 			//			printf("finaleFIle2 = %s\n", finalFile);
 			if (!strncmp(buf, "end of file", 12)) { //마지막 메시지가 end of file이면 종료
 				gettimeofday(&end_point, NULL);
-					stat(buf, &inf_file);
-					int file_size=inf_file.st_size;
-					double timer = File_transfer_speed(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
-					printf("%f Byte",(double)file_size/timer);
+
+					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
+					printf("%f Byte",File_transfer_speed(timer));
 				printf("file close\n");
 				fclose(fd);
 
