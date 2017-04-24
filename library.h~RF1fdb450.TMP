@@ -26,7 +26,6 @@ void TcpServer();
 
 typedef struct _file_information{	//±¸Á¶Ã¼
 	struct dirent dent;
-	char or_file_dir;
 }file_information;
 
 #endif
