@@ -28,7 +28,6 @@ int main(int argc, char** argv){
 				perror("recvfrom");
 				exit(1);
 			}
-<<<<<<< HEAD
 			//printf("** From Client : %s\n", buf);
 			strcpy(buf, "Start");
 			if ((sendto(sd, buf, SIZEBUF, 0,
@@ -38,10 +37,6 @@ int main(int argc, char** argv){
 			}
 			if(!strcmp(buf, "UDP") && !strcmp(buf, "udp") &&
 				!strcmp(buf, "TCP") && !strcmp(buf, "tcp")){
-=======
-			if(!strcmp(buf, "UDP") && !strcmp(buf, "udp") &&
-				!strcmp(buf, "TCP") && !!strcmp(buf, "tcp")){
->>>>>>> fd8bf27d584ea11b5e137147b62ef84e74d6bfe3
 					return 0;
 				}
 			if(strcmp(buf, "UDP") || strcmp(buf, "udp") ){

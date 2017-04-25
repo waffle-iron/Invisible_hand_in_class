@@ -28,4 +28,5 @@ client_function.o: client_function.c
 	$(CC) $(CFLAGS) -c client_function.c 
 
 clean:
-	rm -f server.exe client.exe $(SERVER_OBJS) $(CLIENT_OBJS) 
+	rm -f server.exe client.exe $(SERVER_OBJS) $(CLIENT_OBJS)
+	rm -rf save

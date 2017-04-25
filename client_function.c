@@ -8,66 +8,53 @@ int compare_file_name(const void* f_a, const void* f_b){
 
 	return result;
 }
+
+// UDP 파일 전송하는 함수
 void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name){
 
 	int fd, n;
 	int bytes_read;
 	char buf[SIZEBUF];
 	char temp_file_name[SIZEBUF];
-	// �����̶��� ���� �������� �˸�
 
+	// 파일이라고 서버에게 알려줌
 	if (sendto(sd, "This is File", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
 
-	// �����̶��� ���� ������ �ν��ϰ� ���� �޽���
+	// 파일에 대한 답장 
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom isfile");
 		exit(1);
 	}
-	printf("3\n");
-
+	
 	memset(buf, 0, SIZEBUF);
+		
+	// 저장해야되는 파일 경로 전송
 	sprintf(temp_file_name, "./save/%s", file_name);
-	// ���� �̸� ����
-
 	if (sendto(sd, temp_file_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
 
-
-	//�����̸� �ޱ�
-	//�������� ������ ������ Ŭ���̾�Ʈ���� �ٽ� ���� ���� ������
-	//buf�� ����Ÿ�� �о����̰� �ȴ�
+	// 저장해야되는 파일 경로전송에 대한 답장받음
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom filename");
 		exit(1);
 	}
-	printf("%s\n", buf);
 
-
-	//���� ���� �����̶� �̸��� �ٸ�����
-	//if (strcmp(filename, buf) != 0) { //buf�� ����
-	//	printf("%s\n", buf);
-	//	perror("not match filename.");
-	//	exit(1);
-	//} else {
-	//	// �����̸� �ް�����
-	//	printf("** match filename : %s\n", buf);
-	//}
-	// ���Ͽ���
+	//파일 열기
 	if ((fd = open(file_name, O_RDONLY)) == -1){
 		perror("file open fail");
 		exit(1);
 	}
 
-	//file ������ ����
-	while ((n = read(fd, buf, SIZEBUF)) > 0){ //fd�� �ִ°� buf�� ����
+	// 파일 내용을 전송
+	while ((n = read(fd, buf, SIZEBUF)) > 0){ 
 
-		printf("SEND : %d\n", n);
-
+		printf("SEND FILE CONTENTS SIZE: %d\n", n);
+		
 		if (sendto(sd, buf, n, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 			perror("sendto");
 			exit(1);
@@ -76,169 +63,171 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 
 	memset(buf, 0, SIZEBUF);
 
-	//sprintf(buf, "end of file"); //buf���ٰ� end of file�� ���̴� ��
-	//end of file �� ����
+	// 파일전송이 끝났다고 알려줌.
 	if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
 	}
 
-
-	// end of file Ȯ��
+	// 파일전송에 끝났다는 답장 받음
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom end of file");
 		exit(1);
 	}
-
-	if (strcmp("end of file", buf) == 0) { //buf�� ����
-		printf("%s\n", buf);
+	
+	// 파일전송 끝을 알리는 부분
+	if (strcmp("end of file", buf) == 0) {
+		printf("END OF TRANSFER FILE\n");
 	} else{
-		perror("error : file is not end");
+		printf("END OF TRANSFER FILE ERROR\n");
 		exit(1);
 	}
 }
 
-void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* Dir_name){
+// UDP 디렉토리 전송 하는 함수
+void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_name){
+
+	int index = 0;
+	int bytes_read = 0;
+	int i = 0;
+	int files_size = 1024;
+
+	char buf[SIZEBUF];
+	char temp_dir_name[SIZEBUF];
+	char* cwd;
 	DIR *dp;
 	struct dirent *dent;
-	//index : �����丮�� ���Ϲ� �����丮����
-	int index = 0;
-	int bytes_read;
-	int	files_number = 2000;
-	char buf[SIZEBUF];
-	char temp_dirent_name[2000] = { 0, };
-	char temp_Dir_name[SIZEBUF];
-	char* cwd;
 	struct stat sbuf;
 
-	// �����丮���� ���� �������� �˸�
+	// 디렉토리라고 처음에 서버에게 알려줌.
 	if (sendto(sd, "This is DIR", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto DIR");
 		exit(1);
 	}
-	// �����丮�̶��� ���� ������ �ν��ϰ� ���� �޽���
+	
+	//서버가 알겠다고 응답.
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom isDIR");
 		exit(1);
 	}
-	printf("%s\n",Dir_name);
+	
+	printf("현재 디렉토리 이름 = %s\n", dir_name);
 
 	memset(buf, 0, SIZEBUF);
 
-	// �����丮 �̸� ����
-	/*if (sendto(sd, Dir_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
-		perror("sendto DIRname");
-		exit(1);
-	}*/
-	sprintf(temp_Dir_name, "./save/%s", Dir_name);
-	printf("여기요 %s\n",temp_Dir_name);
-	if (sendto(sd, temp_Dir_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
-		perror("sendto DDDename");
+	//서버는 save 디렉토리 밑에 저장하기 때문에 위치를 이렇게 전송함.
+	sprintf(temp_dir_name, "./save/%s", dir_name);
+	printf("경로 = %s\n", temp_dir_name);
+	
+	// 서버에게 디렉토리 이름 전송
+	if (sendto(sd, temp_dir_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("dir name send error");
 		exit(1);
 	}
 
-	// �����丮�̸� �ޱ�
-	//�������� ������ ������ Ŭ���̾�Ʈ���� �ٽ� ���� ���� ������
-	//buf�� ����Ÿ�� �о����̰� �ȴ�
-
+	// 보낸디렉토리 이름에 대한 응답 받음
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom DIRname");
 		exit(1);
 	}
-printf("%s  ss  ",buf);
-	if ((dp = opendir(Dir_name)) == NULL) {
+	
+	// 해당 디렉토리탐색을 위해 디렉토리 오픈
+	if ((dp = opendir(dir_name)) == NULL) {
 		perror("opendir");
 		exit(1);
 	}
+
 	memset(buf, 0, SIZEBUF);
-	file_information* files = (file_information*)malloc(sizeof(file_information) * files_number);
-	//�����鼭 files �迭�� ����
+	// 해당 디렉토리 안에 있는 파일 및 디렉토리 담는 함수
+	file_information* files = (file_information*)malloc(sizeof(file_information) * files_size);
+	
+	// 디렉토리 내부를 돌면서 file_information에 저장
 	while ((dent = readdir(dp))){
-		if (index >= files_number - 2){
-			files_number *= 2;
-			files = (file_information*)realloc((void*)files, sizeof(file_information) * files_number);
+		if (index >= files_size - 2){
+			files_size *= 2;
+			files = (file_information*)realloc((void*)files, sizeof(file_information) * files_size);
 		}
-		// �̸������� .�ϰ��� ��������
+		
+		// . 과 ..은 자동으로 생성되므로 패스
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
 		}
 		if (strcmp(dent->d_name, "..") == 0){
 			continue;
 		}
-		//������ files�迭�� ����
-		sprintf(temp_Dir_name, "%s/%s",Dir_name ,dent->d_name);
-		if( stat(temp_Dir_name, &sbuf) ==-1 ){
+
+		// 여기는 sava밑이 아닌 자기가 입력한 디렉토리 밑에서 돌아야되므로
+		sprintf(temp_dir_name, "%s/%s", dir_name, dent->d_name);
+		if (stat(temp_dir_name, &sbuf) == -1){
 			perror("stat");
-			exit;
+			exit(1);
 		}
 		files[index].dent = *dent;
-		//�����丮 �ΰ���
-		//printf("sbuf.st_mode = %x",sbuf.st_mode);
-
+ 
+		// 디렉토리 인경우
 		if (S_ISDIR(sbuf.st_mode)){
-			printf("d\n");
 			files[index].or_file_dir = 'd';
 		} else if (S_ISREG(sbuf.st_mode)){
-			//������ ����
-			printf("f\n");
+			//파일 인경우
 			files[index].or_file_dir = 'f';
 		}
 		index++;
 	}
-	printf("he\n");
+	
+	// 이름순으로 보기 편하게 하기위해서 하였음 
+	// 사실상 할 필요 없음 
 	qsort(files, index, sizeof(file_information), compare_file_name);
 
-	int i = 0;
+	// files에 들어가있는 정보를 재귀적으로 돌면서 
+	// 파일인 경우 파일 전송하는 부분으로 보내고
+	// 디렉토리인 경우는 한번 재귀적으로 돌면서 한다.
 	for (i = 0; i < index; ++i){
-		printf("temp = %s\n",temp_Dir_name);
-		sprintf(temp_Dir_name, "%s/%s",Dir_name ,files[i].dent.d_name);
+		printf("파일 순회 = %s\n", temp_dir_name);
+		
+		sprintf(temp_dir_name, "%s/%s", dir_name, files[i].dent.d_name);
+		// 파일인경우 파일출력함수 호출
 		if (files[i].or_file_dir == 'f'){
-			UdpFileTrans(sd, sin, add_len, temp_Dir_name);
+			UdpFileTrans(sd, sin, add_len, temp_dir_name);
 		} else if (files[i].or_file_dir == 'd'){
-			char temp[2] = { '/', '\0' };
-			//�����丮 ���� �����ϱ� ���� ������ ����
-			sprintf(temp_dirent_name, "%s%s%s", Dir_name, temp, files[i].dent.d_name);
-			//Ȱ�� �����丮 ����
-
+			//디렉토리 인경우 
+			
+			//현재 경로 저장
 			cwd = getcwd(NULL, SIZEBUF);
-			//���� �����丮�� �̵��� ����
+			//디렉토리 이동
 			chdir(files[i].dent.d_name);
-			UdpDirTrans(sd, sin, add_len, temp_dirent_name);
-			//�ٽ� Ȱ�� �����丮�� ����
+			//디렉토리 함수 이동
+			UdpDirTrans(sd, sin, add_len, temp_dir_name);
+			//원래 저장경로로 돌아옴
 			chdir(cwd);
 		}
 	}
 
 }
 
-//ù��° �������α׷� / IP / ������ �����丮 or ����
-void UdpClient(int argc, char** argv, int sd,	struct sockaddr_in sin){
+// UDP 클라이언트 부분
+void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
-	// , fd, n;
-		struct stat buf;
-		//char end_buf[SIZEBUF];
-		//char re_buf[SIZEBUF];
+	struct stat buf;
 
-		socklen_t add_len = sizeof(struct sockaddr);
+	socklen_t add_len = sizeof(struct sockaddr);
+	stat(argv[2], &buf);
 
-
-		stat(argv[2], &buf);
-		// �����丮 �ΰ���
-		if (S_ISDIR(buf.st_mode)){
-			printf("�����丮�Դϴ�.\n");
-			UdpDirTrans(sd, sin, add_len, argv[2]);
-		} else if (S_ISREG(buf.st_mode)){
-			//�Է��Ѱ� ������ ����
-			printf("�����Դϴ�.\n");
+	// is directory
+	if (S_ISDIR(buf.st_mode)){
+		printf("THIS IS DIRECTORY.\n");
+		UdpDirTrans(sd, sin, add_len, argv[2]);
+	} else if (S_ISREG(buf.st_mode)){
+		// is file
+		printf("THIS IS FILE.\n");
 		UdpFileTrans(sd, sin, add_len, argv[2]);
 	} else{
-		//���� �� �����丮�� �ƴ� ���� ��������
-		printf("myls: cannot access %s: No such file or directory\n", argv[2]);
+		// ERROR
+		printf("access %s: No such file or directory\n", argv[2]);
 		exit(1);
 	}
 
 
-
+	// 무결성
 	///////////////////////////////////////////////////////////
 	//////// ���Ἲ üũ/////////////////////////////////////////////
 	//printf("check whether your file is correct send\n");

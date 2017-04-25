@@ -1,104 +1,109 @@
 #include "library.h"
 
-<<<<<<< HEAD
 void UdpServer(int sd, struct sockaddr_in sin){
 
 	char buf[SIZEBUF];
 
 	socklen_t  clientlen = sizeof(sin);
 
-	//������ ���� ����
+	// save 디렉토리 안에 저장하기 위해 작성
 	mkdir("save", 0744);
 
 	//
 	while (1) {
-		printf("inwhile~~\n");
+		printf("요청이 들어오기를 대기중입니다.~~\n");
 
 		int bytes_read= 0;
-		// �����丮���� �������� �޴� �κ�
-
+		
+		// 파일 혹은 디렉토리 인지 전송 받음
 		if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
-			perror("recvfrom isDIR");
+			perror("recvfrom file or dir");
 			exit(1);
 		}
-		printf("recvfrom %s\n", buf);
+		
+		printf("전송하고 싶은 게 어떤 것이니? =  %s\n", buf);
 
-		// �������� �ƴ��� �˾Ҵٴ� �޽��� ����
+		// 제대로 잘 받았다고 메시지 전송
 		if (sendto(sd, "SUCCUSS", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
-			perror("�������� �ƴ��� �˾Ҵٴ� �޼���");
+			perror("sendto file or dir");
 			exit(1);
 		}
 
-
-		//���� �ΰ���
+		// 파일 인경우
 		if (strcmp("This is File", buf) == 0){
 			int fd;
-			//���� �̸� �ޱ�
+			
+			// 저장해야되는 파일 경로 받음
 			if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
-				perror("recvfrom filename");
+				perror("recvfrom filepath");
 				exit(1);
 			}
-			// �����̸� �ް� ����
-			printf("** From Client : %s\n", buf);
+			
+			printf("** file path From Client : %s\n", buf);
 
-			//�����̸� ������
+			// 저장해야되는 파일 경로 답장 
 			if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 				perror("sendto filename");
 				exit(1);
 			}
-			//�׸��� ���� �ޱ�
-			// ���Ͽ���
+
+			// 해당 파일을 연다
 			if ((fd = open(buf, O_WRONLY | O_CREAT, 0666)) == -1){
 				perror("file open fail");
 				exit(1);
 			}
-			//file ������ ����
+			
+			// 파일 내용 전송
 			while (1) {
 
 				memset(buf, 0, sizeof(buf));
 
+				// 파일 내용 받음
 				if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
-					perror("recvfrom end of file");
+					perror("recvfrom file contests");
 					exit(1);
 				}
-				printf("RECV : %d byte\n", bytes_read);
-				printf("buf %s = ",buf);
-				//buf[bytes_read] = '\0';
-
-				if (!strncmp(buf, "end of file", SIZEBUF)) { //������ �޽����� end of file�̸� ����
-					//���� �� �޾Ҵٰ� ����
+				printf("SEND FILE CONTENTS SIZE: %d\n", bytes_read);
+				
+				// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
+				if (!strncmp(buf, "end of file", SIZEBUF)) { 
+						
+					// 거기에 대한 답장 
 					if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1){
 						perror("sendto end of file");
 						exit(1);
 					}
 
+					printf(" *****  END OF TRANSFER FILE\n  *****  ");
 					close(fd);
-					printf("file close\n");
-					break; //while�� ����������
+					
+					break; // while문 탈출
 				} else {
-					//			    fputs(buf, stream); //���Ϸ� ����
+					// 끝이 아닌 경우 파일 내용 파일에 작성 
 					write(fd, buf, SIZEBUF);
 				}
 			}
 		} else if (strcmp("This is DIR", buf) == 0){
-			//�����丮 �� ���� �����丮 ������ �׸��� �� �����丮�� �̵�
+			// 디렉토리 인경우
 
-			//�����丮 �̸� �ޱ�
+			// 디렉토리 경로 받음
 			if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &clientlen)) == -1){
 				perror("recvfrom dirname");
 				exit(1);
 			}
 
-			printf("ser@\n");
-			// �����丮 �̸� ����
+			printf(" 디렉토리 경로 = %s", buf);
+			//거기에 대한 답장
 			if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 				perror("sendto dirname");
 				exit(1);
 			}
 
-			printf("버퍼입니당아ㅏ아  = %s\n",buf);
+			// 디렉토리 생성 
 			mkdir(buf, 0744);
-			//		chdir(buf);
+			
+		} else{
+			printf("파일과 디렉토리가 아닙니다.\n");
 		}
 
 		//printf("** From Client : %s\n", buf);// �����̸� �ް� ����

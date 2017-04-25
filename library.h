@@ -19,6 +19,8 @@
 
 #define SIZEBUF 1024
 #define PORTNUM 9000
+
+
 void UdpClient(int argc, char** argv, int sd,	struct sockaddr_in sin);
 void UdpServer();
 void TcpClient(int argc, char** argv);
