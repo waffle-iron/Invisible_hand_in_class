@@ -1,39 +1,42 @@
 #include "library.h"
 
-int fileCount = 1;
-int count_Dir = 0;
-int count_File= 0;
-
 int main(int argc, char** argv){
 	char buf[256];
 	struct sockaddr_in sin, cli;
 	int sd;
+	int reuse = 1;
 	socklen_t clientlen = sizeof(cli);
-
-	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-		perror("socket");
-		exit(1);
-	}
-	memset((char *)&sin, '\0', sizeof(sin));
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(PORTNUM);
-	sin.sin_addr.s_addr = htonl(INADDR_ANY);
-
-	if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-		perror("bind");
-		exit(1);
-	}
 
 	while (1) {
 		printf("server FIRST ~\n");
-		fileCount = 0;
-		
+		if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+			perror("socket");
+			exit(1);
+		}
+ 
+		memset((char *)&sin, '\0', sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_port = htons(PORTNUM);
+		sin.sin_addr.s_addr = htonl(INADDR_ANY);
+ 
+		if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0){
+			perror("setsockopt(SO_REUSEADDR) failed");
+		}
+			
+		if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+			perror("bind");
+			exit(1);
+		}
+
+
+		initGrobal();
 		//파일 갯수 전송 받기 
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom filecount");
 			exit(1);
 		}
-		fileCount = atoi(buf);
+		
+		SetFileCount(atoi(buf));
 		//printf("** From Client : %s\n", buf);
 		if ((sendto(sd, "File count", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 			perror("sendto file count");
@@ -59,28 +62,32 @@ int main(int argc, char** argv){
 		if ( !strcmp(buf, "UDP") || !strcmp(buf, "udp")){
 			printf("udp");
 			UdpServer(sd, cli);
-		}
 
-		if ( !strcmp(buf, "TCP") || !strcmp(buf, "tcp")){
+		}else if ( !strcmp(buf, "TCP") || !strcmp(buf, "tcp")){
 			close(sd);
 			printf("tcp");
+			
 			if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 				perror("socket");
 				exit(1);
 			}
+			
 			memset((char *)&sin, '\0', sizeof(sin));
 			sin.sin_family = AF_INET;
 			sin.sin_port = htons(PORTNUM);
 			sin.sin_addr.s_addr = htonl(INADDR_ANY);
+			
+			if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0){
+				perror("setsockopt(SO_REUSEADDR) failed");
+			}
 
 			if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 				perror("bind");
 				exit(1);
 			}
-
 			TcpServer(sd, cli);
 		}
-
+		close(sd);
 	}
 
 	return 0;

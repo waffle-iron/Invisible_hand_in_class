@@ -1,8 +1,24 @@
 #include "library.h"
 
-extern int fileCount;
-extern int count_Dir;
-extern int count_File;
+int fileCount = 1;
+int count_Dir = 0;
+int count_File = 0; 
+
+void initGrobal(){
+	fileCount = 1;
+	count_Dir = 0;
+	count_File = 0;
+}
+void SetFileCount(int num){
+	fileCount = num;
+}
+
+void SetCountDir(int num){
+	count_Dir = num;
+}
+void SetCountFile(int num){
+	count_File = num;
+}
 
 void CountDir(const char* dir_name){
 	//fileCount는 가지고있다고 생각	
@@ -26,12 +42,14 @@ void CountFile(const char* name){
 	DIR *dp;
 	struct dirent *dent;
 	struct stat buf;
-	
+	char temp_dir_name[SIZEBUF];
+
 	if ((dp = opendir(name)) == NULL){
 		perror("opendir");
 	};
-	char temp_dir_name[SIZEBUF];
+	
 	while ((dent = readdir(dp)) != NULL) {
+
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
 		}
@@ -44,7 +62,6 @@ void CountFile(const char* name){
 			perror("stat");
 			exit(1);
 		}
-		fileCount++;
 
 		if (S_ISDIR(buf.st_mode)){
 			CountFile(temp_dir_name);
@@ -156,22 +173,22 @@ void UdpServer(int sd, struct sockaddr_in cli){
 		}
 	}
 	//무결성
-	
-	//리시브
+	printf("PAHT %s\n", path);
+	CountFile(path);
+	CountDir(path);
+
+	// 파일 개수 전송
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1){
 		perror("file cnt recieve");
 		exit(1);
 	}
-	
 	sprintf(check,"file_cnt = %d", count_File);
-	if( strcmp(buf,check) != 0){
-		flag = 0;	
-	}
-	
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("file cnt");
 		exit(1);
+	}
+	if (strcmp(buf, check) != 0){
+		flag = 0;
 	}
 	//리시브
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1){
@@ -179,21 +196,21 @@ void UdpServer(int sd, struct sockaddr_in cli){
 		exit(1);
 	}
 
+	// 폴더 개수 전송
 	sprintf(check,"dir_cnt = %d", count_Dir);
 	if( strcmp(buf,check) != 0){
 		flag = 0;	
 	}
-	
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("file cnt");
 		exit(1);
 	}
+
 	flag? sprintf(buf,"True"): sprintf(buf,"False");
 
 	//확인
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
-		perror("무결성 체");
+		perror("무결성 체크");
 		exit(1);
 	}
 }
@@ -219,10 +236,9 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		perror("accept");
 		exit(1);
 	}
-	//while (1) {
 	for (i = 0; i < fileCount; ++i){
 		printf("요청이 들어오기를 대기중입니다.~~\n");
-
+		printf("for = %d\n", fileCount);
 		int bytes_read = 0;
 
 		// 파일 혹은 디렉토리 인지 전송 받음
@@ -230,7 +246,6 @@ void TcpServer(int sd, struct sockaddr_in cli){
 			perror("recvfrom file or dir");
 			exit(1);
 		}
-
 		printf("전송하고 싶은 게 어떤 것이니? =  %s\n", buf);
 		if (strcmp("This is File", buf) == 0){
 			file_flag = 1;		
@@ -251,7 +266,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		}
 		if( i == 0 ){
 			sprintf(path,"%s",buf);
-			printf("%s\n",path);
+			printf("첫번쨰 경로 = %s\n",path);
 		}
 		printf(" 디렉토리 경로 = %s\n", buf);
 		//거기에 대한 답장
@@ -260,22 +275,8 @@ void TcpServer(int sd, struct sockaddr_in cli){
 			exit(1);
 		}
 		// 파일 인경우
-		if (file_flag == 1 ){
+		if (file_flag == 1){
 			int fd;
-
-			// 저장해야되는 파일 경로 받음
-			/*if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
-				perror("recv filepath");
-				exit(1);
-			}
-
-			printf("** file path From Client : %s\n", buf);
-
-			// 저장해야되는 파일 경로 답장 
-			if (send(ns, buf, SIZEBUF, 0) == -1){
-				perror("send filename");
-				exit(1);
-			}*/
 
 			// 해당 파일을 연다
 			if ((fd = open(buf, O_WRONLY | O_CREAT, 0666)) == -1){
@@ -304,7 +305,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 						exit(1);
 					}
 
-					printf(" *****  END OF TRANSFER FILE\n  *****  ");
+					printf(" *****  END OF TRANSFER FILE  *****  \n");
 					close(fd);
 
 					break; // while문 탈출
@@ -314,56 +315,53 @@ void TcpServer(int sd, struct sockaddr_in cli){
 				}
 			}
 		} else if (file_flag == 0){
-			// 디렉토리 인경우
-			// 디렉토리 생성 
+			// 디렉토리 인 경우  생성 
 			mkdir(buf, 0744);
-
 		} else{
 			printf("파일과 디렉토리가 아닙니다.\n");
 		}
 	}
-	printf("asdsadas  = %s", path);
+
+	printf("PAHT %s\n", path);
 	CountFile(path);
 	CountDir(path);
 	
-	//리시브
-	if (recv(ns, buf, SIZEBUF, MSG_WAITALL)){
-		perror("file cnt recieve111");
+	// 파일 개수 전송
+	if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("file count recieve");
 		exit(1);
 	}
-	
-	sprintf(check,"file_cnt = %d", count_File);
-	if( strcmp(buf,check) != 0){
-		flag = 0;	
-	}
-	
-	//sendto
-	if (send(ns, buf, SIZEBUF, 0)){
-		perror("file cnt");
+	sprintf(check, "file_cnt = %d", count_File);
+	if (send(ns, buf, SIZEBUF, 0) == -1){
+		perror("file count send");
 		exit(1);
+	}
+	printf("check = %s\n", check);
+	if (strcmp(buf, check) != 0){
+		flag = 0;
 	}
 
-	//리시브
-	if (recv(ns, buf, SIZEBUF, MSG_WAITALL) ){
-		perror("file cnt recieve");
+	// 폴더 개수 전송
+	if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("dir count recieve");
 		exit(1);
 	}
-
 	sprintf(check,"dir_cnt = %d", count_Dir);
-	if( strcmp(buf,check) != 0){
-		flag = 0;	
-	}
-	
-	//sendto
-	if (send(ns, buf, SIZEBUF, 0)){
-		perror("file cnt");
+	if (send(ns, buf, SIZEBUF, 0) == -1){
+		perror("dir count send");
 		exit(1);
 	}
+	printf("check = %s\n", check);
+	if (strcmp(buf, check) != 0){
+		flag = 0;
+	}
+
 	flag? sprintf(buf,"True"): sprintf(buf,"False");
-	printf("qjvjjqj  %s",buf);
+	
 	//확인
-	if (send(ns, buf, SIZEBUF, 0)){
-		perror("무결성 체");
+	if (send(ns, buf, SIZEBUF, 0) == -1){
+		perror("무결성 체크");
 		exit(1);
 	}
+	close(ns);
 }

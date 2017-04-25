@@ -1,8 +1,8 @@
 #include "library.h"
 
-extern int fileCount;
-extern int count_Dir;
-extern int count_File;
+int fileCount = 1;
+int count_Dir = 0;
+int count_File = 0;
 
 int compare_file_name(const void* f_a, const void* f_b){
 
@@ -11,6 +11,16 @@ int compare_file_name(const void* f_a, const void* f_b){
 	char* temp2 = (char*)(((file_information*)f_b)->dent.d_name);
 
 	return result;
+}
+
+int GetCountFile(){
+	return count_File;
+}
+int GetCountDir(){
+	return count_Dir;
+}
+int GetFileCount(){
+	return fileCount;
 }
 
 void CountDir(const char* dir_name){
@@ -98,35 +108,32 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	CountDir(argv[2]);
 
+	// 파일 개수 전송
 	sprintf(buf,"file_cnt = %d", count_File);
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("file cnt");
 		exit(1);
 	}
-	//리시브
-	
+	// 파일 개수 전송받음
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("file cnt recieve");
 		exit(1);
 	}
-
+	// 폴더 개수 전송
 	sprintf(buf,"dir_cnt = %d", count_Dir);
-
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("file cnt");
 		exit(1);
 	}
-	//리시브
-	
+
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("file cnt recieve");
 		exit(1);
 	}
 
+	// 무결성 체크
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
-		perror("무결성 받");
+		perror("무결성 받음");
 		exit(1);
 	}
 	printf("무결성 =  %s\n",buf);	
@@ -347,7 +354,6 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	}
 	
 	// is directory
-
 	if (S_ISDIR(sbuf.st_mode)){
 		printf("THIS IS TCP DIRECTORY.\n");
 		
@@ -369,47 +375,41 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	double total_speed = FileTransferSpeed(total_timer, argv[2]);
 	printf("평균 속도 = %g\n", total_speed);
 
-	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
-
+	//무결성 검사하기 
 	CountDir(argv[2]);
-	printf(" 1 \n");
+	
+	// 파일 개수 전송
 	sprintf(buf,"file_cnt = %d", count_File);
-	//sendto
+	printf("%s\n", buf);
 	if (send(sd, buf, SIZEBUF, 0) == -1){
-		perror("file cnt");
+		perror("file count send");
 		exit(1);
 	}
-	printf(" @ \n");
-	//리시브
-	
+
+	// 파일 개수 전송받음
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
-		perror("file cnt recieve");
+		perror("file count recieve");
 		exit(1);
 	}
-	printf(" 3 \n");
+
+	// 폴더 개수 전송
 	sprintf(buf,"dir_cnt = %d", count_Dir);
-	printf("%s\n",buf);
-	//sendto
+	printf("%s\n", buf);
 	if (send(sd, buf, SIZEBUF, 0) == -1){
-		perror("file cnt");
+		perror("dir count send");
 		exit(1);
 	}
-	printf(" 4 \n");
-	//리시브
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("dir count recieve");
+		exit(1);
+	}
 	
+	// 무결성 체크
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
-		perror("file cnt recieve");
+		perror("무결성 받음 ");
 		exit(1);
 	}
-	printf(" 5 \n");
-	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
-		perror("무결성 받");
-		exit(1);
-	}
-	printf(" 6 \n");
-	printf("무결성 =  %s\n",buf);	
-
-
+	printf("무결성은 = %s\n", buf);
 }
 
 // TCP 파일 전송하는 함수
@@ -702,3 +702,4 @@ long long FolderSize(char *dir_name, long long total_size){
 	}
 	return total_size;
 }
+
