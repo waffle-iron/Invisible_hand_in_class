@@ -4,6 +4,11 @@ int fileCount = 1;
 int count_Dir = 0;
 int count_File = 0; 
 
+void initGrobal(){
+	fileCount = 1;
+	count_Dir = 0;
+	count_File = 0;
+}
 void SetFileCount(int num){
 	fileCount = num;
 }
@@ -43,7 +48,7 @@ void CountFile(const char* name){
 	};
 	
 	while ((dent = readdir(dp)) != NULL) {
-		printf("%s\n", dent->d_name);
+
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
 		}
@@ -56,8 +61,7 @@ void CountFile(const char* name){
 			perror("stat");
 			exit(1);
 		}
-		//fileCount++;
-		printf("%d\n", fileCount);
+
 		if (S_ISDIR(buf.st_mode)){
 			CountFile(temp_dir_name);
 			count_Dir++;
@@ -168,22 +172,22 @@ void UdpServer(int sd, struct sockaddr_in cli){
 		}
 	}
 	//무결성
-	
-	//리시브
+	printf("PAHT %s\n", path);
+	CountFile(path);
+	CountDir(path);
+
+	// 파일 개수 전송
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1){
 		perror("file cnt recieve");
 		exit(1);
 	}
-	
 	sprintf(check,"file_cnt = %d", count_File);
-	if( strcmp(buf,check) != 0){
-		flag = 0;	
-	}
-	
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("file cnt");
 		exit(1);
+	}
+	if (strcmp(buf, check) != 0){
+		flag = 0;
 	}
 	//리시브
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1){
@@ -191,21 +195,21 @@ void UdpServer(int sd, struct sockaddr_in cli){
 		exit(1);
 	}
 
+	// 폴더 개수 전송
 	sprintf(check,"dir_cnt = %d", count_Dir);
 	if( strcmp(buf,check) != 0){
 		flag = 0;	
 	}
-	
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("file cnt");
 		exit(1);
 	}
+
 	flag? sprintf(buf,"True"): sprintf(buf,"False");
 
 	//확인
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
-		perror("무결성 체");
+		perror("무결성 체크");
 		exit(1);
 	}
 }
@@ -316,6 +320,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 			printf("파일과 디렉토리가 아닙니다.\n");
 		}
 	}
+
 	printf("PAHT %s\n", path);
 	CountFile(path);
 	CountDir(path);
@@ -357,5 +362,5 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		perror("무결성 체크");
 		exit(1);
 	}
-	
+	close(ns);
 }

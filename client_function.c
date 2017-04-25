@@ -108,35 +108,30 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	CountDir(argv[2]);
 
+	// 파일 개수 전송
 	sprintf(buf,"file_cnt = %d", count_File);
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("file cnt");
 		exit(1);
 	}
-	//리시브
-	
+	// 파일 개수 전송받음
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("file cnt recieve");
 		exit(1);
 	}
-
+	// 폴더 개수 전송
 	sprintf(buf,"dir_cnt = %d", count_Dir);
-
-	//sendto
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("file cnt");
 		exit(1);
 	}
-	//리시브
-	
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("file cnt recieve");
 		exit(1);
 	}
-
+	// 무결성 체크
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
-		perror("무결성 받");
+		perror("무결성 받음");
 		exit(1);
 	}
 	printf("무결성 =  %s\n",buf);	
@@ -380,7 +375,6 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	
 	//무결성 검사하기 
-	//CountFile(argv[2]);
 	CountDir(argv[2]);
 	
 	// 파일 개수 전송
