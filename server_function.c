@@ -1,17 +1,20 @@
 #include "library.h"
 
-//UDP 서버부분
+extern int fileCount;
+
+////UDP 서버부분
 void UdpServer(int sd, struct sockaddr_in cli){
+	printf("tjlqkflajksdl");
 
+	int i = 0;
 	char buf[SIZEBUF];
-
 	socklen_t clientlen = sizeof(cli);
 
 	// save 디렉토리 안에 저장하기 위해 작성
 	mkdir("save", 0744);
 
-	//
-	while (1) {
+	//while (1) {
+	for (i = 0; i < fileCount; ++i){
 		printf("요청이 들어오기를 대기중입니다.~~\n");
 
 		int bytes_read= 0;
@@ -251,28 +254,28 @@ void UdpServer(int sd, struct sockaddr_in cli){
 }
 
 void TcpServer(int sd, struct sockaddr_in cli){
-	char buf[SIZEBUF +1];
 	int ns;
+	int i = 0;
+	char buf[SIZEBUF];
 	socklen_t clientlen = sizeof(cli);
 
 	// save 디렉토리 안에 저장하기 위해 작성
 	mkdir("save", 0744);
 
-	if (listen(sd, 5) == -1) {
+	if (listen(sd, 5)) {
 		perror("listen");
 		exit(1);
 	}
-	
-	while (1) {
+	//요청을 받음 
+	if ((ns = accept(sd, (struct sockaddr *)&cli, &clientlen)) == -1){
+		perror("accept");
+		exit(1);
+	}
+	//while (1) {
+	for (i = 0; i < fileCount; ++i){
 		printf("요청이 들어오기를 대기중입니다.~~\n");
 
 		int bytes_read = 0;
-
-		//요청을 받음 
-		if ((ns = accept(sd, (struct sockaddr *)&cli, &clientlen)) == -1){
-			perror("accept");
-			exit(1);
-		}
 
 		// 파일 혹은 디렉토리 인지 전송 받음
 		if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
@@ -318,7 +321,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 				memset(buf, 0, sizeof(buf));
 
 				// 파일 내용 받음
-				if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+				if ((bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL)) == -1){
 					perror("recv file contests");
 					exit(1);
 				}
@@ -328,7 +331,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 				if (!strncmp(buf, "end of file", SIZEBUF)) {
 
 					// 거기에 대한 답장 
-					if (send(ns, "end of file", SIZEBUF, MSG_WAITALL) == -1){
+					if (send(ns, "end of file", SIZEBUF, 0) == -1){
 						perror("send end of file");
 						exit(1);
 					}
@@ -451,30 +454,3 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		//close(sd);
 	}
 }
-
-
-/*
-double File_transfer_speed(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec){
-
-	return (double)(end_tv_sec)+(double)(end_tv_usec)/1000000.0-(double)(start_tv_sec)-(double)(start_tv_usec)/1000000.0;
-}
-
-double File_transfer_speed(double timer){
-	struct stat inf_file;
-	stat(buf, &inf_file);
-	int file_size=inf_file.st_size;
-	return (double)file_size/timer;
-}
-
-			gettimeofday(&start_point, NULL);
-
-					gettimeofday(&end_point, NULL);
-
-
-					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
-		gettimeofday(&start_point, NULL);
-				gettimeofday(&end_point, NULL);
-
-					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);					printf("%f Byte",File_transfer_speed(timer));
-*/
-

@@ -1,5 +1,7 @@
 #include "library.h"
 
+extern int fileCount;
+
 int compare_file_name(const void* f_a, const void* f_b){
 
 	int result = 0;
@@ -9,13 +11,46 @@ int compare_file_name(const void* f_a, const void* f_b){
 	return result;
 }
 
+void CountFile(const char* name){
+
+	DIR *dp;
+	struct dirent *dent;
+	struct stat buf;
+	
+	if ((dp = opendir(name)) == NULL){
+		perror("opendir");
+	};
+	char temp_dir_name[SIZEBUF];
+	while ((dent = readdir(dp)) != NULL) {
+		if (strcmp(dent->d_name, ".") == 0){
+			continue;
+		}
+		if (strcmp(dent->d_name, "..") == 0){
+			continue;
+		}
+
+		sprintf(temp_dir_name, "%s/%s", name, dent->d_name);
+		if (stat(temp_dir_name, &buf) == -1){
+			perror("stat");
+			exit(1);
+		}
+		fileCount++;
+
+		if (S_ISDIR(buf.st_mode)){
+			CountFile(temp_dir_name);
+		}
+	}
+}
 // UDP 클라이언트 부분
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	struct stat buf;
+	struct timeval start_point, end_point;
 
 	socklen_t add_len = sizeof(struct sockaddr);
 	stat(argv[2], &buf);
+	
+	gettimeofday(&start_point, NULL);
 
 	// is directory
 	if (S_ISDIR(buf.st_mode)){
@@ -31,7 +66,12 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		exit(1);
 	}
 
+	gettimeofday(&end_point, NULL);
 
+	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
+	printf("총 시간 = %g\n", total_timer);
+	double total_speed = FileTransferSpeed(total_timer, argv[2]);
+	printf("평균 속도 = %g\n", total_speed);
 	// 무결성
 	///////////////////////////////////////////////////////////
 	//////// ���Ἲ üũ/////////////////////////////////////////////
@@ -170,7 +210,7 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 	int index = 0;
 	int bytes_read = 0;
 	int i = 0;
-	int files_size = 1024;
+	int files_size = SIZEBUF;
 
 	char buf[SIZEBUF + 1];
 	char temp_dir_name[SIZEBUF];
@@ -296,17 +336,24 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	//printf("%s\n", filename);
 
 	struct stat buf;
+	struct timeval start_point, end_point;
 
-	stat(argv[2], &buf);
+	if (stat(argv[2], &buf) == -1){
+		perror("stat");
+		exit(1);
+	};
+	gettimeofday(&start_point, NULL);
 
 	// connect 하는 부분
 	if (connect(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 		perror("connect");
 		exit(1);
 	}
+	
 	// is directory
 	if (S_ISDIR(buf.st_mode)){
-		printf("THIS IS DIRECTORY.\n");
+		printf("THIS IS TCP DIRECTORY.\n");
+		
 		TcpDirTrans(sd, argv[2]);
 	} else if (S_ISREG(buf.st_mode)){
 		// is file
@@ -317,6 +364,13 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		printf("access %s: No such file or directory\n", argv[2]);
 		exit(1);
 	}
+
+	gettimeofday(&end_point, NULL);
+
+	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
+	printf("총 시간 = %g\n", total_timer);
+	double total_speed = FileTransferSpeed(total_timer, argv[2]);
+	printf("평균 속도 = %g\n", total_speed);
 
 	//무결성
 	///////////////////////////////////////////////////////////
@@ -430,14 +484,14 @@ void TcpFileTrans(int sd, char* file_name){
 
 		printf("SEND FILE CONTENTS SIZE: %d\n", n);
 
-		if (send(sd, buf, n, 0) == -1) {
+		if (send(sd, buf, SIZEBUF, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
 	}
  
 	memset(buf, 0, SIZEBUF);
-
+	
 	// 파일전송이 끝났다고 알려줌.
 	if (send(sd, "end of file", SIZEBUF, 0) == -1){
 		perror("send filename");
@@ -464,7 +518,7 @@ void TcpDirTrans(int sd, char* dir_name){
 
 	int index = 0;
 	int i = 0;
-	int files_size = 1024;
+	int files_size = SIZEBUF;
 
 	char buf[SIZEBUF];
 	char temp_dir_name[SIZEBUF];
@@ -472,19 +526,19 @@ void TcpDirTrans(int sd, char* dir_name){
 	DIR *dp;
 	struct dirent *dent;
 	struct stat sbuf;
-
+	
 	// 디렉토리라고 처음에 서버에게 알려줌.
 	if (send(sd, "This is DIR", SIZEBUF, 0) == -1){
 		perror("send DIR");
 		exit(1);
 	}
-
+	
 	//서버가 알겠다고 응답.
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv isDIR");
 		exit(1);
 	}
-
+	
 	printf("현재 디렉토리 이름 = %s\n", dir_name);
 
 	memset(buf, 0, SIZEBUF);
@@ -576,4 +630,100 @@ void TcpDirTrans(int sd, char* dir_name){
 		}
 	}
 
+}
+
+double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec){
+
+	return (double)(end_tv_sec)+(double)(end_tv_usec) / 1000000.0 - (double)(start_tv_sec)-(double)(start_tv_usec) / 1000000.0;
+}
+
+double FileTransferSpeed(double total_time, char *F){
+	long long total_size = 0;
+
+	struct stat buf;
+	stat(F, &buf);
+
+	if (S_ISDIR(buf.st_mode)){
+		printf("THIS IS DIRECTORY.\n");
+		total_size += FolderSize(F, total_size);
+	} else if (S_ISREG(buf.st_mode)){
+		// is file
+		printf("THIS IS FILE.\n");
+		total_size += FileSize(F);
+	} else{
+		printf("access %s: No such file or directory\n", F);
+		exit(1);
+	}
+
+	return (double)total_size / total_time;
+}
+
+long long FileSize(char* file_name){
+	struct stat sbuf;
+
+	stat(file_name, &sbuf);
+	long long fsize = sbuf.st_size;
+	return fsize;
+}
+
+long long FolderSize(char *dir_name, long long total_size){
+	DIR *dp;
+	struct dirent *dent;
+	int index = 0;
+	int i = 0;
+	int files_number = SIZEBUF;
+	char buf[SIZEBUF];
+	char temp_dir_name[SIZEBUF];
+	char *cwd;
+	struct stat sbuf;
+
+	memset(buf, 0, sizeof(buf));
+	if ((dp = opendir(dir_name)) == NULL){
+		perror("opendir");
+		exit(1);
+	}
+
+	memset(buf, 0, SIZEBUF);
+	file_information* files = (file_information*)malloc(sizeof(file_information) * files_number);
+
+	while ((dent = readdir(dp))){
+		if (index >= files_number - 2){
+			files_number *= 2;
+			files = (file_information *)realloc((void *)files, sizeof(file_information) * files_number);
+		}
+		if (strcmp(dent->d_name, ".") == 0){
+			continue;
+		}
+		if (strcmp(dent->d_name, "..") == 0){
+			continue;
+		}
+
+		sprintf(temp_dir_name, "%s/%s", dir_name, dent->d_name);
+		if (stat(temp_dir_name, &sbuf) == -1){
+			perror("stat");
+			exit(1);
+		}
+		files[index].dent = *dent;
+		if (S_ISDIR(sbuf.st_mode)){
+			files[index].or_file_dir = 'd';
+		} else if (S_ISREG(sbuf.st_mode)){
+			files[index].or_file_dir = 'f';
+		}
+		index++;
+	}
+
+	for (i = 0; i < index; ++i){
+		printf("temp = %s\n", temp_dir_name);
+		sprintf(temp_dir_name, "%s/%s", dir_name, files[i].dent.d_name);
+		if (files[i].or_file_dir == 'f'){
+			total_size += FileSize(temp_dir_name);
+		} else if (files[i].or_file_dir == 'd'){
+			cwd = getcwd(NULL, SIZEBUF);
+			chdir(files[i].dent.d_name);
+			total_size = total_size + FolderSize(temp_dir_name, total_size);
+			chdir(cwd);
+
+		}
+	}
+	return total_size;
 }

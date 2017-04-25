@@ -30,6 +30,11 @@ void TcpServer(int sd, struct sockaddr_in cli);
 void TcpFileTrans(int sd, char* file_name);
 void TcpDirTrans(int sd, char* dir_name);
 
+void CountFile(const char* name);
+double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec);
+double FileTransferSpeed(double total_time, char *F);
+long long FileSize(char* file_name);
+long long FolderSize(char *dir_name, long long total_size);
 
 typedef struct _file_information{	// 파일 디렉토리 저장하는 구조체
 	struct dirent dent;
