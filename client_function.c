@@ -227,10 +227,12 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		printf("access %s: No such file or directory\n", argv[2]);
 		exit(1);
 	}
-    gettimeofday(&start_point, NULL);
+    gettimeofday(&end_point, NULL);
     
-    double File_Transfer_Timer(start_point.tv_sec, start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
-
+    double total_timer = File_Transfer_Timer(start_point.tv_sec, start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
+    printf("%g\n",total_timer);
+    double total_speed = File_Transfer_Speed(total_timer,argv[2]);
+    printf("%g\n",total_speed);
 	// 무결성
 	///////////////////////////////////////////////////////////
 	//////// ���Ἲ üũ/////////////////////////////////////////////
@@ -461,8 +463,6 @@ long long Folder_Size(char *Dir_name,long long total_size){
     struct stat sbuf;
 
     memset(buf, 0,sizeof(buf));
-    sprintf(temp_Dir_name, temp_Dir_name, Dir_name);
-
     if((dp = opendir(Dir_name)) == NULL){
         perror("opendir");
         exit(1);
@@ -478,7 +478,7 @@ long long Folder_Size(char *Dir_name,long long total_size){
         if(strcmp(dent->d_name, ".") == 0){
             continue;
         }
-        if(strcmp(dent->d_name, ".") == 0){
+        if(strcmp(dent->d_name, "..") == 0){
             continue;
         }
 
@@ -507,7 +507,7 @@ long long Folder_Size(char *Dir_name,long long total_size){
         sprintf(temp_dirent_name, "%s%s%s", Dir_name, temp, files[i].dent.d_name);
         cwd = getcwd(NULL, SIZEBUF);
         chdir(files[i].dent.d_name);
-        total_size += Folder_Size(temp_dirent_name,total_size);
+        total_size = total_size + Folder_Size(temp_dirent_name,total_size);
         chdir(cwd);
         
         }
@@ -519,16 +519,33 @@ long long File_Size(char * file_name){
     struct stat sbuf;
     
     stat(file_name, &sbuf);
-    long long fsize = (long long)sbuf.st_size;
+    long long fsize = sbuf.st_size;
     return fsize;
 }
 
-double File_Transfer_Speed(double total_time){
+double File_Transfer_Speed(double total_time,char *F){
     long long total_size=0;
-    char root_folder[SIZEBUF] = "./save";
-    total_size += Folder_Size(root_folder,total_size);
+
+    struct stat buf;
+    stat(F, &buf);
+
+
+
+    if (S_ISDIR(buf.st_mode)){
+        printf("THIS IS DIRECTORY.\n");
+        total_size += Folder_Size(F,total_size);
+    } else if (S_ISREG(buf.st_mode)){
+    // is file
+        printf("THIS IS FILE.\n");
+        total_size += File_Size(F);
+    } else{
+        printf("access %s: No such file or directory\n", F);
+    exit(1);
+    }
+
 
     return (double)total_size/total_time;
+//    return (double)total_size;
 }
 
 

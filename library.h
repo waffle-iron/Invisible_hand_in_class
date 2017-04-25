@@ -25,8 +25,8 @@ void TcpClient(int argc, char** argv);
 void TcpServer();
 long long Folder_Size(char *Dir_name,long long total_size);
 long long File_Size(char *file_name);
-double File_Transfer_Speed(double total_time);
-double file_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec);
+double File_Transfer_Speed(double total_time,char *F);
+double File_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec);
 typedef struct _file_information{	//����ü
 	struct dirent dent;
 	char or_file_dir;
