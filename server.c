@@ -1,6 +1,8 @@
 #include "library.h"
 
-int fileCount = 0;
+int fileCount = 1;
+int count_Dir = 0;
+int count_File= 0;
 
 int main(int argc, char** argv){
 	char buf[256];
