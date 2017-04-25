@@ -4,6 +4,7 @@ extern int fileCount;
 
 ////UDP 서버부분
 void UdpServer(int sd, struct sockaddr_in cli){
+
 	printf("tjlqkflajksdl");
 
 	int i = 0;
