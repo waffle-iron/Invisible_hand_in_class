@@ -1,6 +1,8 @@
 #include "library.h"
 
 extern int fileCount;
+extern int count_Dir;
+extern int count_File;
 
 int compare_file_name(const void* f_a, const void* f_b){
 
@@ -11,6 +13,23 @@ int compare_file_name(const void* f_a, const void* f_b){
 	return result;
 }
 
+void CountDir(const char* dir_name){
+	//fileCount는 가지고있다고 생각	
+
+	struct stat sbuf;
+	stat(dir_name, &sbuf);
+
+	// 디렉토리 인경우
+	if (S_ISDIR(sbuf.st_mode)){
+		count_Dir++;
+	} else if (S_ISREG(sbuf.st_mode)){
+	//파일 인경우
+		;
+	}
+
+	count_File = fileCount - count_Dir;
+
+}
 void CountFile(const char* name){
 
 	DIR *dp;
@@ -38,25 +57,27 @@ void CountFile(const char* name){
 
 		if (S_ISDIR(buf.st_mode)){
 			CountFile(temp_dir_name);
+			count_Dir++;
 		}
 	}
 }
 // UDP 클라이언트 부분
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
-
-	struct stat buf;
+	char buf[SIZEBUF];
+	struct stat sbuf;
 	struct timeval start_point, end_point;
+	int bytes_read;	
 
 	socklen_t add_len = sizeof(struct sockaddr);
-	stat(argv[2], &buf);
+	stat(argv[2], &sbuf);
 	
 	gettimeofday(&start_point, NULL);
 
 	// is directory
-	if (S_ISDIR(buf.st_mode)){
+	if (S_ISDIR(sbuf.st_mode)){
 		printf("THIS IS DIRECTORY.\n");
 		UdpDirTrans(sd, sin, add_len, argv[2]);
-	} else if (S_ISREG(buf.st_mode)){
+	} else if (S_ISREG(sbuf.st_mode)){
 		// is file
 		printf("THIS IS FILE.\n");
 		UdpFileTrans(sd, sin, add_len, argv[2]);
@@ -72,61 +93,43 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	printf("총 시간 = %g\n", total_timer);
 	double total_speed = FileTransferSpeed(total_timer, argv[2]);
 	printf("평균 속도 = %g\n", total_speed);
-	// 무결성
-	///////////////////////////////////////////////////////////
-	//////// ���Ἲ üũ/////////////////////////////////////////////
-	//printf("check whether your file is correct send\n");
-	//sleep(2);
-	////scanf("file : %s", &filename);
-	//close(fd);
-	////file open
-	//int fd1;
-	//fd1 = open(filename, O_RDONLY);
-	//if (fd1 == -1){
-	//	perror("file open fail");
-	//	exit(1);
-	//}
+	
+	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
 
-	////file ������ �ٽ� ����
-	//while ((n = read(fd1, buf, 255)) > 0){ //fd�� �ִ°� buf�� ����
+	CountDir(argv[2]);
 
-	//	printf("RESEND : %d\n", n);
+	sprintf(buf,"file_cnt = %d", count_File);
+	//sendto
+	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("file cnt");
+		exit(1);
+	}
+	//리시브
+	
+	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+		perror("file cnt recieve");
+		exit(1);
+	}
 
-	//	if (sendto(sd, buf, n, 0, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-	//		perror("resendto");
-	//		exit(1);
-	//	}
-	//}
-	//if (sendto(sd, "end of file", 12, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
-	//	perror("sendto filename");
-	//	exit(1);
-	//}
+	sprintf(buf,"dir_cnt = %d", count_Dir);
 
+	//sendto
+	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("file cnt");
+		exit(1);
+	}
+	//리시브
+	
+	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+		perror("file cnt recieve");
+		exit(1);
+	}
 
-	//// end of file Ȯ��
-	//bytes_read = (recvfrom(sd, end_buf, 12, 0, (struct sockaddr *)&sin, &add_len));
-	//if (bytes_read == -1) {
-	//	perror("recvfrom end of file");
-	//	exit(1);
-	//}
-
-	//if (strcmp("end of file", end_buf) == 0) { //buf�� ����
-	//	printf("%s\n", end_buf);
-	//} else{
-	//	perror("error : file is not end");
-	//	exit(1);
-	//}
-
-	////���� ��ġ ����ġ �޼��� �� �޴´�.
-	//bytes_read = (recvfrom(sd, re_buf, 20, 0, (struct sockaddr *)&sin, &add_len));
-
-	////���� ����ġ���� ������ �ݴ´�
-	//if (strcmp("100%%", re_buf) == 0) { //buf�� ����
-	//	printf("%s same file\n", re_buf);
-	//} else{
-	//	perror("error : file is not same");
-	//	exit(1);
-	//}
+	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
+		perror("무결성 받");
+		exit(1);
+	}
+	printf("무결성 =  %s\n",buf);	
 }
 
 // UDP 파일 전송하는 함수
@@ -327,19 +330,11 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 
 // TCP 클라이언트 부분
 void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
-
-	//int sd, fd, n;
-	//char buf[SIZEBUF];
-	//char end_buf[SIZEBUF];
-	//char percent[SIZEBUF + 1];
-	//struct sockaddr_in sin;
-	//const char* filename = argv[2]; //���� �̸�
-	//printf("%s\n", filename);
-
-	struct stat buf;
+ 	char buf[SIZEBUF];
+	struct stat sbuf;
 	struct timeval start_point, end_point;
 
-	if (stat(argv[2], &buf) == -1){
+	if (stat(argv[2], &sbuf) == -1){
 		perror("stat");
 		exit(1);
 	};
@@ -352,12 +347,12 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	}
 	
 	// is directory
-<<<<<<< HEAD
-	if (S_ISDIR(buf.st_mode)){
+
+	if (S_ISDIR(sbuf.st_mode)){
 		printf("THIS IS TCP DIRECTORY.\n");
 		
 		TcpDirTrans(sd, argv[2]);
-	} else if (S_ISREG(buf.st_mode)){
+	} else if (S_ISREG(sbuf.st_mode)){
 		// is file
 		printf("THIS IS FILE.\n");
 		TcpFileTrans(sd, argv[2]);
@@ -374,75 +369,45 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	double total_speed = FileTransferSpeed(total_timer, argv[2]);
 	printf("평균 속도 = %g\n", total_speed);
 
-    gettimeofday(&end_point, NULL);
-    
-    double total_timer = File_Transfer_Timer(start_point.tv_sec, start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
-    printf("%g\n",total_timer);
-    double total_speed = File_Transfer_Speed(total_timer,argv[2]);
-    printf("%g\n",total_speed);
-	// 무결성
+	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
 
-	///////////////////////////////////////////////////////////
-	//////// ���Ἲ üũ/////////////////////////////////////////////
-	//printf(" check whether your file is correct send\n");
-
-	//sleep(2);
-	////scanf("%s", &filename);
-	////printf("%s\n", filename);
-	////file open
-	//int fd1;
-	//fd1 = open(filename, O_RDONLY);
-	//if (fd1 == -1){
-	//	perror("file open fail");
-	//	exit(1);
-	//}
-
-	////file ������ �ٽ� ����
-	//while ((n = read(fd1, buf, SIZEBUF)) > 0){ //fd�� �ִ°� buf�� ����
-
-	//	printf("RESEND : %d\n", n);
-
-	//	if (send(sd, buf, SIZEBUF, 0) == -1) {
-	//		perror("resendto");
-	//		exit(1);
-	//	}
-	//	memset(buf, 0, SIZEBUF);
-	//}
-	//memset(buf, 0, SIZEBUF);
-	//sprintf(buf, "end of file");
-	////���ϳ��̶��� ����
-	//if (send(sd, buf, SIZEBUF, 0) == -1){
-	//	perror("send filena?me");
-	//	exit(1);
-	//}
-	//// end of file Ȯ��
-	//bytes_read = (recv(sd, end_buf, SIZEBUF, 0));
-
-	//if (bytes_read == -1) {
-	//	perror("recv end of file");
-	//	exit(1);
-	//}
-
-	//if (strcmp("end of file", end_buf) == 0) { //buf�� ����
-	//	//printf("�������̺��� : %s\n", end_buf);
-	//} else{
-	//	perror("error : file is not end");
-	//	exit(1);
-	//}
-	////���� �ӳ�
-	////���� ��ġ ����ġ �޼��� �� �޴´�.
-	//memset(percent, 0, SIZEBUF + 1);
-	//bytes_read = recv(sd, percent, SIZEBUF, 0);
-	////percent[bytes_read] = '\0';
-	////printf("����ġ ������: %d\n", bytes_read);
-	////printf("%s �ۼ�Ʈ �� �������� ����\n", percent);
-	////���� ����ġ���� ������ �ݴ´�
-	//if (strcmp("100percent", percent) == 0) { //buf�� ����
-	//	printf("%s same file\n", percent);
-	//} else{
-	//	printf("error : file is not same\n");
-	//	exit(1);
-	//}
+	CountDir(argv[2]);
+	printf(" 1 \n");
+	sprintf(buf,"file_cnt = %d", count_File);
+	//sendto
+	if (send(sd, buf, SIZEBUF, 0) == -1){
+		perror("file cnt");
+		exit(1);
+	}
+	printf(" @ \n");
+	//리시브
+	
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("file cnt recieve");
+		exit(1);
+	}
+	printf(" 3 \n");
+	sprintf(buf,"dir_cnt = %d", count_Dir);
+	printf("%s\n",buf);
+	//sendto
+	if (send(sd, buf, SIZEBUF, 0) == -1){
+		perror("file cnt");
+		exit(1);
+	}
+	printf(" 4 \n");
+	//리시브
+	
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("file cnt recieve");
+		exit(1);
+	}
+	printf(" 5 \n");
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("무결성 받");
+		exit(1);
+	}
+	printf(" 6 \n");
+	printf("무결성 =  %s\n",buf);	
 
 
 }
@@ -642,7 +607,6 @@ void TcpDirTrans(int sd, char* dir_name){
 
 }
 
-<<<<<<< HEAD
 double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec){
 
 	return (double)(end_tv_sec)+(double)(end_tv_usec) / 1000000.0 - (double)(start_tv_sec)-(double)(start_tv_usec) / 1000000.0;
