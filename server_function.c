@@ -428,30 +428,6 @@ void TcpServer(){
 	}
 
 
-/*
-double file_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec){
-
-	return (double)(end_tv_sec)+(double)(end_tv_usec)/1000000.0-(double)(start_tv_sec)-(double)(start_tv_usec)/1000000.0;
-}
-
-double File_transfer_speed(double timer){
-	struct stat inf_file;
-	stat(buf, &inf_file);
-	int file_size=inf_file.st_size;
-	return (double)file_size/timer;
-}
-
-			gettimeofday(&start_point, NULL);
-
-					gettimeofday(&end_point, NULL);
-
-
-					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
-		gettimeofday(&start_point, NULL);
-				gettimeofday(&end_point, NULL);
-
-					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);					printf("%f Byte",File_transfer_speed(timer));
-*/
 }
 long long folder_Size(char *Dir_name,long long total_size){
     DIR *dp;

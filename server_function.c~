@@ -429,7 +429,7 @@ void TcpServer(){
 
 
 /*
-double File_transfer_speed(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec){
+double file_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec){
 
 	return (double)(end_tv_sec)+(double)(end_tv_usec)/1000000.0-(double)(start_tv_sec)-(double)(start_tv_usec)/1000000.0;
 }
@@ -465,7 +465,7 @@ long long folder_Size(char *Dir_name,long long total_size){
     struct stat sbuf;
 
     memset(buf, 0,sizeof(buf));
-    sprintf(temp_Dir_name, "./save/%s", Dir_name);
+    sprintf(temp_Dir_name, temp_Dir_name, Dir_name);
 
     if((dp = opendir(Dir_name)) == NULL){
         perror("opendir");
@@ -529,7 +529,8 @@ long long file_Size(char * file_name){
 
 double File_transfer_speed(double total_time){
     long long total_size=0;
-    char root_folder[SIZEBUF];
-    memset(root_folder,NULL,sizeof(root_folder));
-    total_size += folder_Size ();
+    char root_folder[SIZEBUF] = "./save";
+    total_size += folder_Size (root_folder,total_size);
+
+    return (double)total_size/total_time;
 }
