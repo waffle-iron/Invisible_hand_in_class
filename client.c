@@ -50,10 +50,10 @@ int main(int argc, char** argv){
 //choose 가 udp or tcp 인지 해서 server의 UdpServer() 또는 TcpServer()
 
 	if(strcmp(choose, "UDP") || strcmp(choose, "udp")){
-		UdpClient(argc, argv,sd , sin);
+		UdpClient(argc, argv, sd , sin);
 	}
 	else if (strcmp(choose, "TCP") || strcmp(choose, "tcp")){
-		TcpClient(argc, argv);
+		TcpClient(argc, argv, sd, sin);
 	}
 
 

@@ -2,9 +2,9 @@
 
 int main(int argc, char** argv){
 	char buf[256];
-	struct sockaddr_in sin;
+	struct sockaddr_in sin, cli;
 	int sd;
-	socklen_t  clientlen = sizeof(struct sockaddr);
+	socklen_t clientlen = sizeof(cli);
 
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
@@ -17,21 +17,18 @@ int main(int argc, char** argv){
 
 
 	if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-
 		perror("bind");
 		exit(1);
 	}
 	while (1) {
 		printf("while~\n");
-		if ((recvfrom(sd, buf, SIZEBUF, 0,
-			(struct sockaddr *)&sin, &clientlen)) == -1) {
+		if ((recvfrom(sd, buf, SIZEBUF, 0,	(struct sockaddr *)&cli, &clientlen)) == -1) {
 				perror("recvfrom");
 				exit(1);
 			}
 			//printf("** From Client : %s\n", buf);
 			strcpy(buf, "Start");
-			if ((sendto(sd, buf, SIZEBUF, 0,
-			(struct sockaddr *)&sin, sizeof(sin))) == -1) {
+			if ((sendto(sd, buf, SIZEBUF, 0,(struct sockaddr *)&cli, sizeof(cli))) == -1) {
 				perror("sendto");
 				exit(1);
 			}
@@ -40,10 +37,10 @@ int main(int argc, char** argv){
 					return 0;
 				}
 			if(strcmp(buf, "UDP") || strcmp(buf, "udp") ){
-				UdpServer(sd,sin);
+				UdpServer(sd, cli);
 			}
 			if(strcmp(buf, "TCP") || strcmp(buf, "tcp") ){
-				TcpServer();
+				TcpServer(sd, cli);
 			}
 
 		}
