@@ -1,12 +1,10 @@
 #include "library.h"
 
-int fileCount = 1;
-
 int main(int argc, char** argv){
 
 	int sd;
 	char buf[SIZEBUF];
-	
+	int fileCount = 1;
 	const char* filename = argv[2]; //파일 이름
 	const char* choose = argv[3]; //TCP/UDP
 
@@ -26,8 +24,8 @@ int main(int argc, char** argv){
 	sin.sin_port = htons(PORTNUM);
 
 	CountFile(filename);
-	printf(" %d = ", fileCount);
-	sprintf(buf, "%d", fileCount);
+	printf(" GetFileCount() %d", GetFileCount());
+	sprintf(buf, "%d", GetFileCount());
 	//파일 갯수가 몇개인지 전송
 	if (sendto(sd, buf, strlen(choose) + 1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto file Count");
@@ -60,14 +58,12 @@ int main(int argc, char** argv){
 	if(!strcmp(choose, "UDP") || !strcmp(choose, "udp")){
 		UdpClient(argc, argv, sd , sin);
 	}else if (!strcmp(choose, "TCP") || !strcmp(choose, "tcp")){
-		printf("%d\n", sd);
 		close(sd);
 
 		if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 			perror("socket");
 			exit(1);
 		}
-		printf("%d\n", sd);
 		// init
 		memset((char *)&sin, '\0', sizeof(sin));
 		sin.sin_family = AF_INET;

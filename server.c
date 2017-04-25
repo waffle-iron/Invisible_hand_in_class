@@ -1,7 +1,5 @@
 #include "library.h"
 
-int fileCount = 0;
-
 int main(int argc, char** argv){
 	char buf[256];
 	struct sockaddr_in sin, cli;
@@ -24,14 +22,13 @@ int main(int argc, char** argv){
 
 	while (1) {
 		printf("server FIRST ~\n");
-		fileCount = 0;
-		
 		//파일 갯수 전송 받기 
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom filecount");
 			exit(1);
 		}
-		fileCount = atoi(buf);
+		
+		SetFileCount(atoi(buf));
 		//printf("** From Client : %s\n", buf);
 		if ((sendto(sd, "File count", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 			perror("sendto file count");
