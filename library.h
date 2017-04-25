@@ -30,10 +30,6 @@ void TcpFileTrans(int sd, char* file_name);
 void TcpDirTrans(int sd, char* dir_name);
 
 
-void UdpClient(int argc, char** argv, int sd,	struct sockaddr_in sin);
-void UdpServer();
-void TcpClient(int argc, char** argv);
-void TcpServer();
 long long Folder_Size(char *Dir_name,long long total_size);
 long long File_Size(char *file_name);
 double File_Transfer_Speed(double total_time,char *F);

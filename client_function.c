@@ -591,7 +591,7 @@ void TcpDirTrans(int sd, char* dir_name){
 
 }
 
-}
+
 
 long long Folder_Size(char *Dir_name,long long total_size){
     DIR *dp;
