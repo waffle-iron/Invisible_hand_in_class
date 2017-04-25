@@ -534,7 +534,7 @@ void TcpDirTrans(int sd, char* dir_name){
 			files = (file_information*)realloc((void*)files, sizeof(file_information) * files_size);
 		}
 
-
+<<<<<<< HEAD
 		// . 과 ..은 자동으로 생성되므로 패스
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
@@ -590,7 +590,7 @@ void TcpDirTrans(int sd, char* dir_name){
 	}
 
 }
-
+=======
 }
 
 long long Folder_Size(char *Dir_name,long long total_size){
@@ -708,4 +708,4 @@ double File_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,
 
 					double timer = timer_cal(start_point.tv_sec,start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);					printf("%f Byte",File_transfer_speed(timer));
 */
-
+>>>>>>> Timer
