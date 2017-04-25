@@ -208,11 +208,9 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	struct stat buf;
-    struct timeval start_point,end_point;
 
 	socklen_t add_len = sizeof(struct sockaddr);
 	stat(argv[2], &buf);
-    gettimeofday(&start_point, NULL);
 
 	// is directory
 	if (S_ISDIR(buf.st_mode)){
@@ -227,9 +225,7 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		printf("access %s: No such file or directory\n", argv[2]);
 		exit(1);
 	}
-    gettimeofday(&start_point, NULL);
-    
-    double File_Transfer_Timer(start_point.tv_sec, start_point.tv_usec,end_point.tv_sec,end_point.tv_usec);
+
 
 	// 무결성
 	///////////////////////////////////////////////////////////
@@ -449,7 +445,7 @@ void TcpClient(int argc, char** argv){
 
 }
 
-long long Folder_Size(char *Dir_name,long long total_size){
+long long folder_Size(char *Dir_name,long long total_size){
     DIR *dp;
     struct dirent *dent;
     int index = 0;
@@ -501,13 +497,13 @@ long long Folder_Size(char *Dir_name,long long total_size){
         printf("temp = %s\n",temp_Dir_name);
         sprintf(temp_Dir_name, "%s/%s",Dir_name ,files[i].dent.d_name);
         if (files[i].or_file_dir == 'f'){
-            total_size += File_Size(temp_Dir_name);//
+            total_size += file_Size(temp_Dir_name);//
         } else if (files[i].or_file_dir == 'd'){
         char temp[2] = { '/', '\0' };
         sprintf(temp_dirent_name, "%s%s%s", Dir_name, temp, files[i].dent.d_name);
         cwd = getcwd(NULL, SIZEBUF);
         chdir(files[i].dent.d_name);
-        total_size += Folder_Size(temp_dirent_name,total_size);
+        total_size += folder_Size(temp_dirent_name,total_size);
         chdir(cwd);
         
         }
@@ -515,7 +511,7 @@ long long Folder_Size(char *Dir_name,long long total_size){
     return total_size;
 }
 
-long long File_Size(char * file_name){
+long long file_Size(char * file_name){
     struct stat sbuf;
     
     stat(file_name, &sbuf);
@@ -523,21 +519,27 @@ long long File_Size(char * file_name){
     return fsize;
 }
 
-double File_Transfer_Speed(double total_time){
+double File_transfer_speed(double total_time){
     long long total_size=0;
     char root_folder[SIZEBUF] = "./save";
-    total_size += Folder_Size(root_folder,total_size);
+    total_size += folder_Size (root_folder,total_size);
 
     return (double)total_size/total_time;
 }
 
-
-double File_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec){
+/*
+double file_Transfer_Timer(long start_tv_sec,long start_tv_usec,long end_tv_sec,long end_tv_usec){
 
 	return (double)(end_tv_sec)+(double)(end_tv_usec)/1000000.0-(double)(start_tv_sec)-(double)(start_tv_usec)/1000000.0;
 }
 
-/*
+double File_transfer_speed(double timer){
+	struct stat inf_file;
+	stat(buf, &inf_file);
+	int file_size=inf_file.st_size;
+	return (double)file_size/timer;
+}
+
 			gettimeofday(&start_point, NULL);
 
 					gettimeofday(&end_point, NULL);
