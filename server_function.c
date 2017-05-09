@@ -71,13 +71,14 @@ void CountFile(const char* name){
 	}
 }
 
-void FilePathCheck(int file_size, int sd){
+void FilePathCheck(int file_size, int sd, struct sockaddr_in cli){
 	//클라언트 array 받고 , 내꺼 파일이랑 비교
 
 	int offset =0;
 	int index = 0;
 	struct stat * buf;
 	char temp_file_name[SIZEBUF];
+	socklen_t clientlen = sizeof(cli);
 	int i = 0;
 
 	for(i=0; i<file_size; i++){
@@ -105,29 +106,33 @@ void FilePathCheck(int file_size, int sd){
 	}
 	// 클라이언트에게 offset index 보낸다.
 
-	if (send(sd, buf, SIZEBUF, 0) == -1){
+
+	sprintf(buf, "%d", offset);
+	if ((sendto(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 		perror("sendto offset");
 		exit(1);
 	}
 
-	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+	if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 		perror("recv offset");
 		exit(1);
 	}
 
-	if (send(sd, buf, SIZEBUF, 0) == -1){
+	sprintf(buf, "%d", index);
+
+	if ((sendto(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 		perror("sendto index");
 		exit(1);
 	}
 
-	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+	if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 		perror("recv index");
 		exit(1);
 	}
 
 
 	//파일 끝의 내용을 받는다 클라이언트 부분에서 마지막 파일 완전한지 체크하고 메세지를 전송받는다
-
+/*
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("last file");
 		exit(1);
@@ -137,7 +142,7 @@ void FilePathCheck(int file_size, int sd){
 	if (!strncmp(buf, "last file check", SIZEBUF)){
 
 	}
-
+*/
 }
 
 

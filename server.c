@@ -60,7 +60,7 @@ int main(int argc, char** argv){
 		// ////서버가 가지고 있는 array 만들기
 		// file_info = (file_information*)malloc(sizeof(file_information) * file_size);//동적할당
 		//
-		FilePathCheck(file_size); //클라이언트 어레이
+		FilePathCheck(file_size, sd , cli); //클라이언트 어레이
 		free(file_info);
 
 

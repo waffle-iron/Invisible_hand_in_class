@@ -10,7 +10,7 @@ int main(int argc, char** argv){
 
 	struct sockaddr_in sin;
 	socklen_t add_len = sizeof(struct sockaddr);
-	
+
 	// socket open
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
@@ -31,7 +31,7 @@ int main(int argc, char** argv){
 
 	CountFile(filename);
 	sprintf(buf, "%d", GetFileCount());
-/*	int i; 
+/*	int i;
 	for(i =0; i<atoi(buf); ++i){
 		printf("path = %s, file? =  %c\n", file_info[i].path, file_info[i].or_file_dir);
 	}*/
@@ -45,7 +45,7 @@ int main(int argc, char** argv){
 		perror("recvfrom ready");
 		exit(1);
 	}
-	
+
 	//경로 전체배열 전송
 	if (sendto(sd, file_info, sizeof(file_information) * idx, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto file and dir path");
@@ -57,7 +57,7 @@ int main(int argc, char** argv){
 		exit(1);
 	}
 
-	double total_size = FileTransferSize(argv[2]);
+	double total_size = 655555;//FileTransferSize(argv[2]);
 	if(65535.0 < total_size){
 		strncpy(choose,"TCP",strlen(choose));
 		printf("socket TCP\n");
@@ -92,7 +92,7 @@ int main(int argc, char** argv){
 
 	//choose 가 udp or tcp 인지 해서 server의 UdpServer() 또는 TcpServer()
 	if(!strcmp(choose, "UDP") || !strcmp(choose, "udp")){
-		UdpClient(argc, argv, sd , sin);
+		//UdpClient(argc, argv, sd , sin);
 	}else if (!strcmp(choose, "TCP") || !strcmp(choose, "tcp")){
 		close(sd);
 

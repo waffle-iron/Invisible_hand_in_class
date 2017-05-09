@@ -9,7 +9,7 @@ int compare_file_name(const void* f_a, const void* f_b){
 	int result = 0;
 	char* temp1 = (char*)(((file_information*)f_a)->path);
 	char* temp2 = (char*)(((file_information*)f_b)->path);
-	
+
 	return strcmp(temp1,temp2);
 }
 
@@ -24,7 +24,7 @@ int GetFileCount(){
 }
 
 void CountDir(const char* dir_name){
-	//fileCount는 가지고있다고 생각	
+	//fileCount는 가지고있다고 생각
 
 	struct stat sbuf;
 	stat(dir_name, &sbuf);
@@ -45,7 +45,7 @@ void CountFile(const char* name){
 	DIR *dp;
 	struct dirent *dent;
 	struct stat buf;
-	
+
 	strcpy(file_info[idx].path,name);
 
 	if ((dp = opendir(name)) == NULL){
@@ -77,7 +77,7 @@ void CountFile(const char* name){
 			exit(1);
 		}
 		fileCount++;
-		
+
 		//디렉토리 인경우
 		if (S_ISDIR(buf.st_mode)){
 			CountFile(temp_dir_name);
@@ -92,17 +92,17 @@ void CountFile(const char* name){
 	}
 	qsort(file_info, idx, sizeof(file_information), compare_file_name);
 }
-
+/*
 // UDP 클라이언트 부분
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	char buf[SIZEBUF];
 	struct stat sbuf;
 	struct timeval start_point, end_point;
-	int bytes_read;	
+	int bytes_read;
 
 	socklen_t add_len = sizeof(struct sockaddr);
 	stat(argv[2], &sbuf);
-	
+
 	gettimeofday(&start_point, NULL);
 
 	// is directory
@@ -125,7 +125,7 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	printf("총 시간 = %g\n", total_timer);
 	double total_size = FileTransferSize(argv[2]);
 	printf("평균 속도 = %g\n", total_size/total_timer);
-	
+
 	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
 
 	CountDir(argv[2]);
@@ -158,7 +158,7 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		perror("무결성 받음");
 		exit(1);
 	}
-	printf("무결성 =  %s\n",buf);	
+	printf("무결성 =  %s\n",buf);
 }
 
 // UDP 파일 전송하는 함수
@@ -175,7 +175,7 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 		exit(1);
 	}
 
-	// 파일에 대한 답장 
+	// 파일에 대한 답장
 	if ((bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len)) == -1){
 		perror("recvfrom isfile");
 		exit(1);
@@ -322,11 +322,11 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 		index++;
 	}
 
-	// 이름순으로 보기 편하게 하기위해서 하였음 
-	// 사실상 할 필요 없음 
+	// 이름순으로 보기 편하게 하기위해서 하였음
+	// 사실상 할 필요 없음
 	qsort(files, index, sizeof(file_information), compare_file_name);
 
-	// files에 들어가있는 정보를 재귀적으로 돌면서 
+	// files에 들어가있는 정보를 재귀적으로 돌면서
 	// 파일인 경우 파일 전송하는 부분으로 보내고
 	// 디렉토리인 경우는 한번 재귀적으로 돌면서 한다.
 	for (i = 0; i < index; ++i){
@@ -337,7 +337,7 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 		if (files[i].or_file_dir == 'f'){
 			UdpFileTrans(sd, sin, add_len, temp_dir_name);
 		} else if (files[i].or_file_dir == 'd'){
-			//디렉토리 인경우 
+			//디렉토리 인경우
 
 			//현재 경로 저장
 			cwd = getcwd(NULL, SIZEBUF);
@@ -351,7 +351,7 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 	}
 
 }
-
+*/
 // TCP 클라이언트 부분
 void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	int i;
@@ -362,13 +362,13 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	struct timeval start_point, end_point;
 
 	gettimeofday(&start_point, NULL);
- 
+
 	// connect 하는 부분
 	if (connect(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 		perror("connect");
 		exit(1);
 	}
-	
+
 	// 해당 파일의 오프셋 받음
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv offset");
@@ -380,12 +380,12 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		perror("send offset");
 		exit(1);
 	}
-	
+
 	// 전송해야되는 파일 시작점을 받음
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv file_offset");
 		exit(1);
-	}	
+	}
 	file_start_number = atoi(buf);
 	// 전송해야되는 파일 시작점을 잘받았다는 문자열 전송
 	if (send(sd, "Good!! file_start_number", SIZEBUF, 0) == -1){
@@ -397,7 +397,7 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	// 이어서 전송하기 위해서 전송하는 부분 부터 진행
 
 	for(i = file_start_number; i < idx; ++i){
-	
+
 		// is directory
 		if (file_info[i].or_file_dir == 'd'){
 			printf("THIS IS TCP DIRECTORY.\n");
@@ -412,17 +412,17 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 			exit(1);
 		}
 	}
-	
+
 	gettimeofday(&end_point, NULL);
 
-	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
+	/*double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
 	printf("총 시간 = %g\n", total_timer);
 	double total_size = FileTransferSize(argv[2]);
 	printf("평균 속도 = %g\n", total_size/total_timer);
-
-	//무결성 검사하기 
+*/
+	//무결성 검사하기
 	CountDir(argv[2]);
-	
+
 	// 파일 개수 전송
 	sprintf(buf,"file_cnt = %d", count_File);
 	printf("%s\n", buf);
@@ -448,7 +448,7 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		perror("dir count recieve");
 		exit(1);
 	}
-	
+
 	// 무결성 체크
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("무결성 받음 ");
@@ -470,7 +470,7 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 		exit(1);
 	}
 
-	// 파일에 대한 답장 
+	// 파일에 대한 답장
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv isfile");
 		exit(1);
@@ -509,9 +509,9 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 			exit(1);
 		}
 	}
- 
+
 	memset(buf, 0, SIZEBUF);
-	
+
 	// 파일전송이 끝났다고 알려줌.
 	if (send(sd, "end of file", SIZEBUF, 0) == -1){
 		perror("send filename");
@@ -546,19 +546,19 @@ void TcpDirTrans(int sd, char* dir_name){
 	DIR *dp;
 	struct dirent *dent;
 	struct stat sbuf;
- 
+
 	// 디렉토리라고 처음에 서버에게 알려줌.
 	if (send(sd, "This is DIR", SIZEBUF, 0) == -1){
 		perror("send DIR");
 		exit(1);
 	}
-	
+
 	//서버가 알겠다고 응답.
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv isDIR");
 		exit(1);
 	}
-	
+
 	printf("현재 디렉토리 이름 = %s\n", dir_name);
 
 	memset(buf, 0, SIZEBUF);
@@ -623,11 +623,11 @@ void TcpDirTrans(int sd, char* dir_name){
 		index++;
 	}
 
-	// 이름순으로 보기 편하게 하기위해서 하였음 
-	// 사실상 할 필요 없음 
+	// 이름순으로 보기 편하게 하기위해서 하였음
+	// 사실상 할 필요 없음
 	qsort(files, index, sizeof(file_information), compare_file_name);
 
-	// files에 들어가있는 정보를 재귀적으로 돌면서 
+	// files에 들어가있는 정보를 재귀적으로 돌면서
 	// 파일인 경우 파일 전송하는 부분으로 보내고
 	// 디렉토리인 경우는 한번 재귀적으로 돌면서 한다.
 	for (i = 0; i < index; ++i){
@@ -638,7 +638,7 @@ void TcpDirTrans(int sd, char* dir_name){
 		if (files[i].or_file_dir == 'f'){
 			TcpFileTrans(sd, temp_dir_name);
 		} else if (files[i].or_file_dir == 'd'){
-			//디렉토리 인경우 
+			//디렉토리 인경우
 
 			//현재 경로 저장
 			cwd = getcwd(NULL, SIZEBUF);
@@ -652,7 +652,7 @@ void TcpDirTrans(int sd, char* dir_name){
 	}
 */
 }
-
+/*
 double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec){
 
 	return (double)(end_tv_sec)+(double)(end_tv_usec) / 1000000.0 - (double)(start_tv_sec)-(double)(start_tv_usec) / 1000000.0;
@@ -748,4 +748,4 @@ long long FolderSize(char *dir_name, long long total_size){
 	}
 	return total_size;
 }
-
+*/
