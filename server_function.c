@@ -2,7 +2,7 @@
 
 int fileCount = 1;
 int count_Dir = 0;
-int count_File = 0; 
+int count_File = 0;
 
 void initGrobal(){
 	fileCount = 1;
@@ -21,7 +21,7 @@ void SetCountFile(int num){
 }
 
 void CountDir(const char* dir_name){
-	//fileCount는 가지고있다고 생각	
+	//fileCount는 가지고있다고 생각
 
 	struct stat sbuf;
 	stat(dir_name, &sbuf);
@@ -30,7 +30,7 @@ void CountDir(const char* dir_name){
 	if (S_ISDIR(sbuf.st_mode)){
 		count_Dir++;
 	} else if (S_ISREG(sbuf.st_mode)){
-	//파일 인경우
+		//파일 인경우
 		;
 	}
 
@@ -45,9 +45,10 @@ void CountFile(const char* name){
 	char temp_dir_name[SIZEBUF];
 
 	if ((dp = opendir(name)) == NULL){
-		perror("opendir");
+		return ;
+		//perror("opendir");
 	};
-	
+
 	while ((dent = readdir(dp)) != NULL) {
 
 		if (strcmp(dent->d_name, ".") == 0){
@@ -69,6 +70,88 @@ void CountFile(const char* name){
 		}
 	}
 }
+
+void FilePathCheck(int file_size, int sd){
+	//클라언트 array 받고 , 내꺼 파일이랑 비교
+
+	int offset =0;
+	int index = 0;
+	struct stat * buf;
+	char temp_file_name[SIZEBUF];
+	int i = 0;
+
+	for(i=0; i<file_size; i++){
+		sprintf(temp_file_name,"./save/%s",file_info[i].path);
+
+		if(lstat(temp_file_name,buf) >= 0){
+			//파일 읽는것 파일이 있을경우
+			index = i;
+			offset = FileLocatePointer(temp_file_name);
+			//
+		}
+		else if(lstat(temp_file_name,buf) < 0 && i == 0){
+			index=0;
+			offset=0;
+			break;
+		}
+		else {
+			//파일이 없을경우 // 그전 파일의 offset 을 구한다.
+			sprintf(temp_file_name,"./save/%s",file_info[i-1].path);
+			offset = FileLocatePointer(temp_file_name);
+			index = i-1;
+			break;
+		}
+
+	}
+	// 클라이언트에게 offset index 보낸다.
+
+	if (send(sd, buf, SIZEBUF, 0) == -1){
+		perror("sendto offset");
+		exit(1);
+	}
+
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("recv offset");
+		exit(1);
+	}
+
+	if (send(sd, buf, SIZEBUF, 0) == -1){
+		perror("sendto index");
+		exit(1);
+	}
+
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("recv index");
+		exit(1);
+	}
+
+
+	//파일 끝의 내용을 받는다 클라이언트 부분에서 마지막 파일 완전한지 체크하고 메세지를 전송받는다
+
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("last file");
+		exit(1);
+	}
+
+	//메세지 체크
+	if (!strncmp(buf, "last file check", SIZEBUF)){
+
+	}
+
+}
+
+
+int FileLocatePointer(char *file){
+	int fileEnd=0;
+
+
+	int fd = open(file, O_RDONLY | O_CREAT | O_APPEND);
+	fileEnd=lseek(fd, (off_t)0, SEEK_END);
+	close(fd);
+
+	return fileEnd;
+}
+
 
 ////UDP 서버부분
 void UdpServer(int sd, struct sockaddr_in cli){
@@ -94,7 +177,7 @@ void UdpServer(int sd, struct sockaddr_in cli){
 			perror("recvfrom file or dir");
 			exit(1);
 		}
-		
+
 		// 제대로 잘 받았다고 메시지 전송
 		if (sendto(sd, "SUCCUSS", SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 			perror("sendto file or dir");
@@ -102,10 +185,10 @@ void UdpServer(int sd, struct sockaddr_in cli){
 		}
 		printf("전송하고 싶은 게 어떤 것이니? =  %s\n", buf);
 		if (strcmp("This is File", buf) == 0){
-			file_flag = 1;		
+			file_flag = 1;
 		}
 		if(strcmp("This is DIR", buf) == 0){
-			file_flag = 0;		
+			file_flag = 0;
 		}
 
 		// 디렉토리 경로 받음
@@ -133,7 +216,7 @@ void UdpServer(int sd, struct sockaddr_in cli){
 				perror("file open fail");
 				exit(1);
 			}
-			
+
 			// 파일 내용 전송
 			while (1) {
 
@@ -145,11 +228,11 @@ void UdpServer(int sd, struct sockaddr_in cli){
 					exit(1);
 				}
 				printf("SEND FILE CONTENTS SIZE: %d\n", bytes_read);
-				
+
 				// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
-				if (!strncmp(buf, "end of file", SIZEBUF)) { 
-						
-					// 거기에 대한 답장 
+				if (!strncmp(buf, "end of file", SIZEBUF)) {
+
+					// 거기에 대한 답장
 					if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli)) == -1){
 						perror("sendto end of file");
 						exit(1);
@@ -157,21 +240,20 @@ void UdpServer(int sd, struct sockaddr_in cli){
 
 					printf(" *****  END OF TRANSFER FILE\n  *****  ");
 					close(fd);
-					
+
 					break; // while문 탈출
 				} else {
-					// 끝이 아닌 경우 파일 내용 파일에 작성 
+					// 끝이 아닌 경우 파일 내용 파일에 작성
 					write(fd, buf, SIZEBUF);
 				}
 			}
 		} else if (file_flag == 0){
 			// 디렉토리 인경우
-			// 디렉토리 생성 
+			// 디렉토리 생성
 			mkdir(buf, 0744);
 		} else{
 			printf("파일과 디렉토리가 아닙니다.\n");
 		}
-
 	}
 	//무결성
 	printf("PAHT %s\n", path);
@@ -200,7 +282,7 @@ void UdpServer(int sd, struct sockaddr_in cli){
 	// 폴더 개수 전송
 	sprintf(check,"dir_cnt = %d", count_Dir);
 	if( strcmp(buf,check) != 0){
-		flag = 0;	
+		flag = 0;
 	}
 	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("file cnt");
@@ -224,7 +306,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 	char path[SIZEBUF];
 	char check[SIZEBUF];
 	int flag = 1;
-	int file_flag = 1; // 1 파일 0  폴
+	//int file_flag = 1; // 1 파일 0  폴
 	// save 디렉토리 안에 저장하기 위해 작성
 	mkdir("save", 0744);
 
@@ -232,7 +314,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		perror("listen");
 		exit(1);
 	}
-	//요청을 받음 
+	//요청을 받음
 	if ((ns = accept(sd, (struct sockaddr *)&cli, &clientlen)) == -1){
 		perror("accept");
 		exit(1);
@@ -241,51 +323,20 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		printf("요청이 들어오기를 대기중입니다.~~\n");
 		printf("for = %d\n", fileCount);
 		int bytes_read = 0;
+		if(file_info[i].or_file_dir == 'd'){
+			mkdir(file_info[i].path, 0744);
+			continue;
 
-		// 파일 혹은 디렉토리 인지 전송 받음
-		if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
-			perror("recvfrom file or dir");
-			exit(1);
-		}
-		printf("전송하고 싶은 게 어떤 것이니? =  %s\n", buf);
-		if (strcmp("This is File", buf) == 0){
-			file_flag = 1;		
-		}
-		if(strcmp("This is DIR", buf) == 0){
-			file_flag = 0;		
-		}
-		// 제대로 잘 받았다고 메시지 전송
-		if (send(ns, "SUCCUSS", SIZEBUF, 0) == -1) {
-			perror("send");
-			exit(1);
-		}
-
-		// 디렉토리 경로 받음
-		if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
-			perror("recv dirname");
-			exit(1);
-		}
-		if( i == 0 ){
-			sprintf(path,"%s",buf);
-			printf("첫번쨰 경로 = %s\n",path);
-		}
-		printf(" 디렉토리 경로 = %s\n", buf);
-		//거기에 대한 답장
-		if (send(ns, buf, SIZEBUF, 0) == -1){
-			perror("send dirname");
-			exit(1);
-		}
-		// 파일 인경우
-		if (file_flag == 1){
+		} else if(file_info[i].or_file_dir == 'f'){
 			int fd;
 
 			// 해당 파일을 연다
-			if ((fd = open(buf, O_WRONLY | O_CREAT, 0666)) == -1){
+			if ((fd = open(buf, O_WRONLY | O_CREAT | O_APPEND, 0666)) == -1){
 				perror("file open fail");
 				exit(1);
 			}
 
-			// 파일 내용 전송
+			// 파일 내용 받음
 			while (1) {
 
 				memset(buf, 0, sizeof(buf));
@@ -300,7 +351,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 				// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
 				if (!strncmp(buf, "end of file", SIZEBUF)) {
 
-					// 거기에 대한 답장 
+					// 거기에 대한 답장
 					if (send(ns, "end of file", SIZEBUF, 0) == -1){
 						perror("send end of file");
 						exit(1);
@@ -310,59 +361,134 @@ void TcpServer(int sd, struct sockaddr_in cli){
 					close(fd);
 
 					break; // while문 탈출
-				} else {
-					// 끝이 아닌 경우 파일 내용 파일에 작성 
+				}else {
+					// 끝이 아닌 경우 파일 내용 파일에 작성
 					write(fd, buf, SIZEBUF);
 				}
 			}
-		} else if (file_flag == 0){
-			// 디렉토리 인 경우  생성 
-			mkdir(buf, 0744);
-		} else{
-			printf("파일과 디렉토리가 아닙니다.\n");
 		}
+		// 파일 혹은 디렉토리 인지 전송 받음
+		/*if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("recvfrom file or dir");
+		exit(1);
 	}
+	printf("전송하고 싶은 게 어떤 것이니? =  %s\n", buf);
+	if (strcmp("This is File", buf) == 0){
+	file_flag = 1;
+}
+if(strcmp("This is DIR", buf) == 0){
+file_flag = 0;
+}
+// 제대로 잘 받았다고 메시지 전송
+if (send(ns, "SUCCUSS", SIZEBUF, 0) == -1) {
+perror("send");
+exit(1);
+}
 
-	printf("PAHT %s\n", path);
-	CountFile(path);
-	CountDir(path);
-	
-	// 파일 개수 전송
-	if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
-		perror("file count recieve");
-		exit(1);
-	}
-	sprintf(check, "file_cnt = %d", count_File);
-	if (send(ns, buf, SIZEBUF, 0) == -1){
-		perror("file count send");
-		exit(1);
-	}
-	printf("check = %s\n", check);
-	if (strcmp(buf, check) != 0){
-		flag = 0;
-	}
+// 디렉토리 경로 받음
+if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+perror("recv dirname");
+exit(1);
+}x
+if( i == 0 ){
+sprintf(path,"%s",buf);
+printf("첫번쨰 경로 = %s\n",path);
+}
+printf(" 디렉토리 경로 = %s\n", buf);
+//거기에 대한 답장
+if (send(ns, buf, SIZEBUF, 0) == -1){
+perror("send dirname");
+exit(1);
+}
+// 파일 인경우
+if (file_flag == 1){
+int fd;
 
-	// 폴더 개수 전송
-	if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
-		perror("dir count recieve");
-		exit(1);
-	}
-	sprintf(check,"dir_cnt = %d", count_Dir);
-	if (send(ns, buf, SIZEBUF, 0) == -1){
-		perror("dir count send");
-		exit(1);
-	}
-	printf("check = %s\n", check);
-	if (strcmp(buf, check) != 0){
-		flag = 0;
-	}
+// 해당 파일을 연다
+if ((fd = open(buf, O_WRONLY | O_CREAT, 0666)) == -1){
+perror("file open fail");
+exit(1);
+}
 
-	flag? sprintf(buf,"True"): sprintf(buf,"False");
-	
-	//확인
-	if (send(ns, buf, SIZEBUF, 0) == -1){
-		perror("무결성 체크");
-		exit(1);
-	}
-	close(ns);
+// 파일 내용 전송
+while (1) {
+
+memset(buf, 0, sizeof(buf));
+
+// 파일 내용 받음
+if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+perror("recv file contests");
+exit(1);
+}
+printf("SEND FILE CONTENTS SIZE: %d\n", bytes_read);
+
+// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
+if (!strncmp(buf, "end of file", SIZEBUF)) {
+
+// 거기에 대한 답장
+if (send(ns, "end of file", SIZEBUF, 0) == -1){
+perror("send end of file");
+exit(1);
+}
+
+printf(" *****  END OF TRANSFER FILE  *****  \n");
+close(fd);
+
+break; // while문 탈출
+} else {
+// 끝이 아닌 경우 파일 내용 파일에 작성
+write(fd, buf, SIZEBUF);
+}
+}
+} else if (file_flag == 0){
+// 디렉토리 인 경우  생성
+mkdir(buf, 0744);
+} else{
+printf("파일과 디렉토리가 아닙니다.\n");
+}
+}
+
+printf("PAHT %s\n", path);*/
+CountFile(path);
+CountDir(path);
+
+// 파일 개수 전송
+if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+	perror("file count recieve");
+	exit(1);
+}
+sprintf(check, "file_cnt = %d", count_File);
+if (send(ns, buf, SIZEBUF, 0) == -1){
+	perror("file count send");
+	exit(1);
+}
+printf("check = %s\n", check);
+if (strcmp(buf, check) != 0){
+	flag = 0;
+}
+
+// 폴더 개수 전송
+if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+	perror("dir count recieve");
+	exit(1);
+}
+sprintf(check,"dir_cnt = %d", count_Dir);
+if (send(ns, buf, SIZEBUF, 0) == -1){
+	perror("dir count send");
+	exit(1);
+}
+printf("check = %s\n", check);
+if (strcmp(buf, check) != 0){
+	flag = 0;
+}
+
+flag? sprintf(buf,"True"): sprintf(buf,"False");
+
+//확인
+if (send(ns, buf, SIZEBUF, 0) == -1){
+	perror("무결성 체크");
+	exit(1);
+}
+close(ns);
+}
 }
