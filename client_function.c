@@ -397,7 +397,7 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	// 이어서 전송하기 위해서 전송하는 부분 부터 진행
 
 	for(i = file_start_number; i < idx; ++i){
-
+		printf("file name = %s\n",file_info[i].path);
 		// is directory
 		if (file_info[i].or_file_dir == 'd'){
 			printf("THIS IS TCP DIRECTORY.\n");
@@ -497,7 +497,7 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 		perror("file open fail");
 		exit(1);
 	}
-	lseek(fd, file_offset, SEEK_SET);
+	//lseek(fd, file_offset, SEEK_SET);
 
 	// 파일 내용을 전송
 	while ((n = read(fd, buf, SIZEBUF)) > 0){
@@ -508,6 +508,7 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 			perror("send");
 			exit(1);
 		}
+		printf("send clear\n");
 	}
 
 	memset(buf, 0, SIZEBUF);
@@ -531,6 +532,7 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 		printf("END OF TRANSFER FILE ERROR\n");
 		exit(1);
 	}
+	close(fd);
 }
 
 // TCP 디렉토리 전송 하는 함수

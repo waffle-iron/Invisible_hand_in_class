@@ -47,12 +47,12 @@ int main(int argc, char** argv){
 		//client 로 부터 file info array을 한다
 		file_info = (file_information*)malloc(sizeof(file_information) * file_size);//동적할당
 
-		if ((recvfrom(sd, file_info, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
+		if ((recvfrom(sd, file_info, sizeof(file_information) * file_size, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom filecount");
 			exit(1);
 		}
 
-		if ((sendto(sd, "path array", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
+		if ((sendto(sd, "path array", sizeof(file_information) * file_size, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 			perror("sendto path array");
 			exit(1);
 		}

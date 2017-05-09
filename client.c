@@ -36,6 +36,7 @@ int main(int argc, char** argv){
 		printf("path = %s, file? =  %c\n", file_info[i].path, file_info[i].or_file_dir);
 	}*/
 	//파일 갯수가 몇개인지 전송
+	printf("file 갯수 : %s\n", buf);
 	if (sendto(sd, buf, 12, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto file Count");
 		exit(1);
@@ -59,7 +60,8 @@ int main(int argc, char** argv){
 
 	double total_size = 655555;//FileTransferSize(argv[2]);
 	if(65535.0 < total_size){
-		strncpy(choose,"TCP",strlen(choose));
+		strcpy(choose,"TCP");
+
 		printf("socket TCP\n");
 		fflush(stdout);
 		// TCP/UDP인지 전송
@@ -69,7 +71,7 @@ int main(int argc, char** argv){
 		}
 	}
 	else if(65535.0 > total_size){
-		strncpy(choose,"UDP",strlen(choose));
+		strcpy(choose,"UDP");
 		printf("socket UDP\n");
 		fflush(stdout);
 		// TCP/UDP인지 전송
@@ -79,16 +81,22 @@ int main(int argc, char** argv){
 		}
 	}
 
+
+
 	//준비 되었는지 메세지 받기
 	if (recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len) == -1){
 		perror("recvfrom ready");
 		exit(1);
 	}
 
+	printf("choose stop %s\n", choose);
+
 	if (strcmp("Start", buf) != 0) { //buf랑 비교
 		perror("Server is not ready");
 		exit(1);
 	}
+	printf("choose stop2 %s\n", choose);
+
 
 	//choose 가 udp or tcp 인지 해서 server의 UdpServer() 또는 TcpServer()
 	if(!strcmp(choose, "UDP") || !strcmp(choose, "udp")){
