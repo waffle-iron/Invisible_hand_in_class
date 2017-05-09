@@ -8,7 +8,6 @@ int main(int argc, char** argv){
 	const char* filename = argv[2]; //파일 이름
 	char choose[20]; //= argv[3]; //TCP/UDP
 
-
 	struct sockaddr_in sin;
 	socklen_t add_len = sizeof(struct sockaddr);
 	
@@ -24,8 +23,18 @@ int main(int argc, char** argv){
 	sin.sin_addr.s_addr = inet_addr(argv[1]);//아이피 주소
 	sin.sin_port = htons(PORTNUM);
 
+	// 파일 및 디렉토리 담는 변수 선언
+	// 5.9일 추가
+	idx = 0;
+	files_size = SIZEBUF;
+	file_info = (file_information*)malloc(sizeof(file_information) * files_size);
+
 	CountFile(filename);
 	sprintf(buf, "%d", GetFileCount());
+/*	int i; 
+	for(i =0; i<atoi(buf); ++i){
+		printf("path = %s, file? =  %c\n", file_info[i].path, file_info[i].or_file_dir);
+	}*/
 	//파일 갯수가 몇개인지 전송
 	if (sendto(sd, buf, 12, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto file Count");
@@ -36,6 +45,18 @@ int main(int argc, char** argv){
 		perror("recvfrom ready");
 		exit(1);
 	}
+	
+	//경로 전체배열 전송
+	if (sendto(sd, file_info, sizeof(file_information) * idx, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+		perror("sendto file and dir path");
+		exit(1);
+	}
+	// 거기에 대한 답장을 받음`
+	if (recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len) == -1){
+		perror("recvfrom file and dir path");
+		exit(1);
+	}
+
 	double total_size = FileTransferSize(argv[2]);
 	if(65535.0 < total_size){
 		strncpy(choose,"TCP",strlen(choose));
@@ -89,6 +110,6 @@ int main(int argc, char** argv){
 	}
 
 	close(sd);
-	
+	free(file_info);
 	return 0;
 }

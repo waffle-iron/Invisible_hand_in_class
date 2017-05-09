@@ -7,10 +7,10 @@ int count_File = 0;
 int compare_file_name(const void* f_a, const void* f_b){
 
 	int result = 0;
-	char* temp1 = (char*)(((file_information*)f_a)->dent.d_name);
-	char* temp2 = (char*)(((file_information*)f_b)->dent.d_name);
-
-	return result;
+	char* temp1 = (char*)(((file_information*)f_a)->path);
+	char* temp2 = (char*)(((file_information*)f_b)->path);
+	
+	return strcmp(temp1,temp2);
 }
 
 int GetCountFile(){
@@ -46,31 +46,53 @@ void CountFile(const char* name){
 	struct dirent *dent;
 	struct stat buf;
 	
+	strcpy(file_info[idx].path,name);
+
 	if ((dp = opendir(name)) == NULL){
-		perror("opendir");
-	};
+		//perror("opendir");
+		file_info[idx].or_file_dir = 'f';
+		idx++;
+		return ;
+	}else{
+		file_info[idx].or_file_dir = 'd';
+		idx++;
+	}
+
 	char temp_dir_name[SIZEBUF];
 	while ((dent = readdir(dp)) != NULL) {
+		if (idx >= files_size - 2){
+			files_size *= 2;
+			file_info = (file_information*)realloc((void*)file_info, sizeof(file_information) * files_size);
+		}
+		// .과 ..은 자동으로 생성되므로 패스
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
 		}
 		if (strcmp(dent->d_name, "..") == 0){
 			continue;
 		}
-
 		sprintf(temp_dir_name, "%s/%s", name, dent->d_name);
 		if (stat(temp_dir_name, &buf) == -1){
 			perror("stat");
 			exit(1);
 		}
 		fileCount++;
-
+		
+		//디렉토리 인경우
 		if (S_ISDIR(buf.st_mode)){
 			CountFile(temp_dir_name);
 			count_Dir++;
+
+		} else if (S_ISREG(buf.st_mode)){
+			//파일 인경우
+			strcpy(file_info[idx].path, temp_dir_name);
+			file_info[idx].or_file_dir = 'f';
+			idx++;
 		}
 	}
+	qsort(file_info, idx, sizeof(file_information), compare_file_name);
 }
+
 // UDP 클라이언트 부분
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	char buf[SIZEBUF];
@@ -217,10 +239,8 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 // UDP 디렉토리 전송 하는 함수
 void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_name){
 
-	int index = 0;
 	int bytes_read = 0;
 	int i = 0;
-	int files_size = SIZEBUF;
 
 	char buf[SIZEBUF + 1];
 	char temp_dir_name[SIZEBUF];
@@ -268,9 +288,6 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 	}
 
 	memset(buf, 0, SIZEBUF);
-	// 해당 디렉토리 안에 있는 파일 및 디렉토리 담는 함수
-
-	file_information* files = (file_information*)malloc(sizeof(file_information) * files_size);
 
 	// 디렉토리 내부를 돌면서 file_information에 저장
 	while ((dent = readdir(dp))){
@@ -337,14 +354,13 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 
 // TCP 클라이언트 부분
 void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
- 	char buf[SIZEBUF];
+	int i;
+	int file_offset;
+	int file_start_number;
+	char buf[SIZEBUF];
 	struct stat sbuf;
 	struct timeval start_point, end_point;
 
-	if (stat(argv[2], &sbuf) == -1){
-		perror("stat");
-		exit(1);
-	};
 	gettimeofday(&start_point, NULL);
  
 	// connect 하는 부분
@@ -353,21 +369,50 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		exit(1);
 	}
 	
-	// is directory
-	if (S_ISDIR(sbuf.st_mode)){
-		printf("THIS IS TCP DIRECTORY.\n");
-		
-		TcpDirTrans(sd, argv[2]);
-	} else if (S_ISREG(sbuf.st_mode)){
-		// is file
-		printf("THIS IS FILE.\n");
-		TcpFileTrans(sd, argv[2]);
-	} else{
-		// ERROR
-		printf("access %s: No such file or directory\n", argv[2]);
+	// 해당 파일의 오프셋 받음
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("recv offset");
+		exit(1);
+	}
+	file_offset = atoi(buf);
+	// 오프셋을 잘받았다는 문자열 전송
+	if (send(sd, "Good!! offset", SIZEBUF, 0) == -1){
+		perror("send offset");
+		exit(1);
+	}
+	
+	// 전송해야되는 파일 시작점을 받음
+	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
+		perror("recv file_offset");
+		exit(1);
+	}	
+	file_start_number = atoi(buf);
+	// 전송해야되는 파일 시작점을 잘받았다는 문자열 전송
+	if (send(sd, "Good!! file_start_number", SIZEBUF, 0) == -1){
+		perror("send offset");
 		exit(1);
 	}
 
+	// 만약 처음 전송하는 부분이면 파일 시작점이 0이기에 처음부터 전송
+	// 이어서 전송하기 위해서 전송하는 부분 부터 진행
+
+	for(i = file_start_number; i < idx; ++i){
+	
+		// is directory
+		if (file_info[i].or_file_dir == 'd'){
+			printf("THIS IS TCP DIRECTORY.\n");
+			TcpDirTrans(sd, file_info[i].path);
+		} else if (file_info[i].or_file_dir == 'f'){
+			// is file
+			printf("THIS IS FILE.\n");
+			TcpFileTrans(sd, file_info[i].path, file_offset);
+		} else{
+			// ERROR
+			printf("access %s: No such file or directory\n", argv[2]);
+			exit(1);
+		}
+	}
+	
 	gettimeofday(&end_point, NULL);
 
 	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
@@ -413,14 +458,14 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 }
 
 // TCP 파일 전송하는 함수
-void TcpFileTrans(int sd, char* file_name){
+void TcpFileTrans(int sd, char* file_name, int file_offset){
 
 	int fd, n;
 	char buf[SIZEBUF];
 	char temp_file_name[SIZEBUF];
 
 	// 파일이라고 서버에게 알려줌
-	if (send(sd, "This is File", SIZEBUF, 0) == -1){
+/*	if (send(sd, "This is File", SIZEBUF, 0) == -1){
 		perror("send filename");
 		exit(1);
 	}
@@ -446,12 +491,13 @@ void TcpFileTrans(int sd, char* file_name){
 		perror("recvfrom filename");
 		exit(1);
 	}
-
+*/
 	//파일 열기
 	if ((fd = open(file_name, O_RDONLY)) == -1){
 		perror("file open fail");
 		exit(1);
 	}
+	lseek(fd, file_offset, SEEK_SET);
 
 	// 파일 내용을 전송
 	while ((n = read(fd, buf, SIZEBUF)) > 0){
@@ -489,7 +535,7 @@ void TcpFileTrans(int sd, char* file_name){
 
 // TCP 디렉토리 전송 하는 함수
 void TcpDirTrans(int sd, char* dir_name){
-
+/*
 	int index = 0;
 	int i = 0;
 	int files_size = SIZEBUF;
@@ -604,7 +650,7 @@ void TcpDirTrans(int sd, char* dir_name){
 			chdir(cwd);
 		}
 	}
-
+*/
 }
 
 double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec){

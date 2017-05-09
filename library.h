@@ -19,6 +19,7 @@
 
 #define SIZEBUF 1024
 #define PORTNUM 9000
+
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin);
 void UdpServer(int sd, struct sockaddr_in cli);
 void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name);
@@ -26,7 +27,7 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 
 void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin);
 void TcpServer(int sd, struct sockaddr_in cli);
-void TcpFileTrans(int sd, char* file_name);
+void TcpFileTrans(int sd, char* file_name, int file_offset);
 void TcpDirTrans(int sd, char* dir_name);
 
 void CountFile(const char* name);
@@ -37,8 +38,12 @@ long long FolderSize(char *dir_name, long long total_size);
 
 typedef struct _file_information{	//����ü
 
-	struct dirent dent;
+	char path[SIZEBUF];
 	char or_file_dir;
 }file_information;
+
+file_information* file_info;
+int files_size;
+int idx;
 
 #endif
