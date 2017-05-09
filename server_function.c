@@ -45,7 +45,8 @@ void CountFile(const char* name){
 	char temp_dir_name[SIZEBUF];
 
 	if ((dp = opendir(name)) == NULL){
-		perror("opendir");
+		 return ;
+		//perror("opendir");
 	};
 	
 	while ((dent = readdir(dp)) != NULL) {

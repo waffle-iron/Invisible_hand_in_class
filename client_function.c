@@ -46,8 +46,11 @@ void CountFile(const char* name){
 	struct dirent *dent;
 	struct stat buf;
 	
+	//파일이거나 디렉터리명이 제대로 안된경우
+
 	if ((dp = opendir(name)) == NULL){
-		perror("opendir");
+		//perror("opendir");
+		return ;
 	};
 	char temp_dir_name[SIZEBUF];
 	while ((dent = readdir(dp)) != NULL) {
@@ -70,6 +73,7 @@ void CountFile(const char* name){
 			count_Dir++;
 		}
 	}
+
 }
 // UDP 클라이언트 부분
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
@@ -79,12 +83,13 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	int bytes_read;	
 
 	socklen_t add_len = sizeof(struct sockaddr);
-	stat(argv[2], &sbuf);
+	lstat(argv[2], &sbuf);
 	
 	gettimeofday(&start_point, NULL);
 
 	// is directory
 	if (S_ISDIR(sbuf.st_mode)){
+		printf("aaaaaaaa : %ox\n", sbuf.st_mode);
 		printf("THIS IS DIRECTORY.\n");
 		UdpDirTrans(sd, sin, add_len, argv[2]);
 	} else if (S_ISREG(sbuf.st_mode)){
