@@ -5,7 +5,8 @@ int main(int argc, char** argv){
 	struct sockaddr_in sin, cli;
 	int sd;
 	int reuse = 1;
-	socklen_t clientlen = sizeof(cli);
+
+    socklen_t clientlen = sizeof(cli);
 
 	while (1) {
 		printf("server FIRST ~\n");
@@ -28,14 +29,13 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 
-
 		initGrobal();
 		//���� ���� ���� �ޱ�
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
-			perror("recvfrom filecount");
+			perror("recvfrom filecount111");
 			exit(1);
 		}
-		int file_size = (int)buf;
+	    files_size = atoi(buf);
 
 		SetFileCount(atoi(buf));
 		//printf("** From Client : %s\n", buf);
@@ -45,13 +45,14 @@ int main(int argc, char** argv){
 		}
 
 		//client 로 부터 file info array을 한다
-		file_info = (file_information*)malloc(sizeof(file_information) * file_size);//동적할당
+		file_info = (file_information*)malloc(sizeof(file_information) * files_size);//동적할당
+        printf("file_size : %d\n", files_size);
 
-		if ((recvfrom(sd, file_info, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
-			perror("recvfrom filecount");
+		if ((recvfrom(sd, file_info, sizeof(file_information) * files_size , 0 , (struct sockaddr *)&cli, &clientlen)) == -1) {
+			perror("recvfrom filecount222");
 			exit(1);
 		}
-
+        
 		if ((sendto(sd, "path array", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 			perror("sendto path array");
 			exit(1);
@@ -60,18 +61,16 @@ int main(int argc, char** argv){
 		// ////서버가 가지고 있는 array 만들기
 		// file_info = (file_information*)malloc(sizeof(file_information) * file_size);//동적할당
 		//
-		FilePathCheck(file_size, sd , cli); //클라이언트 어레이
-		free(file_info);
-
 
 		// TCP/UDP���� ����
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom");
 			exit(1);
 		}
-		//printf("** From Client : %s\n", buf);
+        //printf("printfprintf : %s\n" , buf);
+
 		if ((sendto(sd, "Start", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
-			perror("sendto");
+			perror("sendto start");
 			exit(1);
 		}
 
