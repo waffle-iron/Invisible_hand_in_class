@@ -30,7 +30,7 @@ int main(int argc, char** argv){
 
 
 		initGrobal();
-		//ÆÄÀÏ °¹¼ö Àü¼Û ¹Þ±â 
+		//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ±ï¿½ 
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom filecount");
 			exit(1);
@@ -43,7 +43,7 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 
-		// TCP/UDPÀÎÁö Àü¼Û
+		// TCP/UDPï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom");
 			exit(1);

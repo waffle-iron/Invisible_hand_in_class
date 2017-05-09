@@ -101,8 +101,8 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
 	printf("총 시간 = %g\n", total_timer);
-	double total_speed = FileTransferSpeed(total_timer, argv[2]);
-	printf("평균 속도 = %g\n", total_speed);
+	double total_size = FileTransferSize(argv[2]);
+	printf("평균 속도 = %g\n", total_size/total_timer);
 	
 	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
 
@@ -372,8 +372,8 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 
 	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
 	printf("총 시간 = %g\n", total_timer);
-	double total_speed = FileTransferSpeed(total_timer, argv[2]);
-	printf("평균 속도 = %g\n", total_speed);
+	double total_size = FileTransferSize(argv[2]);
+	printf("평균 속도 = %g\n", total_size/total_timer);
 
 	//무결성 검사하기 
 	CountDir(argv[2]);
@@ -612,7 +612,7 @@ double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec,
 	return (double)(end_tv_sec)+(double)(end_tv_usec) / 1000000.0 - (double)(start_tv_sec)-(double)(start_tv_usec) / 1000000.0;
 }
 
-double FileTransferSpeed(double total_time, char *F){
+double FileTransferSize(char *F){
 	long long total_size = 0;
 
 	struct stat buf;
@@ -630,7 +630,7 @@ double FileTransferSpeed(double total_time, char *F){
 		exit(1);
 	}
 
-	return (double)total_size / total_time;
+	return (double)total_size;
 }
 
 long long FileSize(char* file_name){

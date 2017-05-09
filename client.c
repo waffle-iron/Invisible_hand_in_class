@@ -6,11 +6,12 @@ int main(int argc, char** argv){
 	char buf[SIZEBUF];
 	int fileCount = 1;
 	const char* filename = argv[2]; //파일 이름
-	const char* choose = argv[3]; //TCP/UDP
+	char choose[20]; //= argv[3]; //TCP/UDP
+
 
 	struct sockaddr_in sin;
 	socklen_t add_len = sizeof(struct sockaddr);
-
+	
 	// socket open
 	if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
@@ -26,7 +27,7 @@ int main(int argc, char** argv){
 	CountFile(filename);
 	sprintf(buf, "%d", GetFileCount());
 	//파일 갯수가 몇개인지 전송
-	if (sendto(sd, buf, strlen(choose) + 1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+	if (sendto(sd, buf, 12, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto file Count");
 		exit(1);
 	}
@@ -35,11 +36,26 @@ int main(int argc, char** argv){
 		perror("recvfrom ready");
 		exit(1);
 	}
-
-	// TCP/UDP인지 전송
-	if (sendto(sd, choose, strlen(choose)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
-		perror("sendto TCP/UDP");
-		exit(1);
+	double total_size = FileTransferSize(argv[2]);
+	if(65535.0 < total_size){
+		strncpy(choose,"TCP",strlen(choose));
+		printf("socket TCP\n");
+		fflush(stdout);
+		// TCP/UDP인지 전송
+		if (sendto(sd, choose, strlen(choose)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+			perror("sendto TCP");
+			exit(1);
+		}
+	}
+	else if(65535.0 > total_size){
+		strncpy(choose,"UDP",strlen(choose));
+		printf("socket UDP\n");
+		fflush(stdout);
+		// TCP/UDP인지 전송
+		if (sendto(sd, choose, strlen(choose)+1, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+			perror("sendto UDP");
+			exit(1);
+		}
 	}
 
 	//준비 되었는지 메세지 받기

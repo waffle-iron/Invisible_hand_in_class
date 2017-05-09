@@ -31,7 +31,7 @@ void TcpDirTrans(int sd, char* dir_name);
 
 void CountFile(const char* name);
 double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec);
-double FileTransferSpeed(double total_time, char *F);
+double FileTransferSize(char *F);
 long long FileSize(char* file_name);
 long long FolderSize(char *dir_name, long long total_size);
 

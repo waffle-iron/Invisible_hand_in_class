@@ -171,6 +171,7 @@ void UdpServer(int sd, struct sockaddr_in cli){
 		} else{
 			printf("파일과 디렉토리가 아닙니다.\n");
 		}
+
 	}
 	//무결성
 	printf("PAHT %s\n", path);
