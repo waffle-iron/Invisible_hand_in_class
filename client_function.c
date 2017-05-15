@@ -92,19 +92,73 @@ void CountFile(const char* name){
 	}
 	qsort(file_info, idx, sizeof(file_information), compare_file_name);
 }
-/*
+
 // UDP 클라이언트 부분
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	char buf[SIZEBUF];
 	struct stat sbuf;
 	struct timeval start_point, end_point;
 	int bytes_read;
+	int i;
+	int file_start_number;
+	int file_offset;
+
+
 
 	socklen_t add_len = sizeof(struct sockaddr);
 	stat(argv[2], &sbuf);
 
-	gettimeofday(&start_point, NULL);
 
+	// 해당 파일의 오프셋 받음
+	if (recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len) == -1){
+		perror("recv offset");
+		exit(1);
+	}
+	file_offset = atoi(buf);
+
+	// 오프셋을 잘받았다는 문자열 전송
+		if (sendto(sd, "Good!! offset", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+			perror("send offset");
+			exit(1);
+		}
+
+		// 전송해야되는 파일 시작점을 받음
+		if (recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len) == -1){
+			perror("recv file_offset");
+			exit(1);
+		}
+		file_start_number = atoi(buf);
+		// 전송해야되는 파일 시작점을 잘받았다는 문자열 전송
+		if (sendto(sd, "Good!! file_start_number", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
+			perror("send offset");
+			exit(1);
+		}
+
+		// 만약 처음 전송하는 부분이면 파일 시작점이 0이기에 처음부터 전송
+	// 이어서 전송하기 위해서 전송하는 부분 부터 진행
+
+	for(i = file_start_number; i < idx; ++i){
+		printf("file name = %s\n",file_info[i].path);
+		// is directory
+		if (file_info[i].or_file_dir == 'd'){
+			printf("THIS IS TCP DIRECTORY.\n");
+			//TcpDirTrans(sd, file_info[i].path);
+			UdpDirTrans(sd, sin, add_len, argv[2]);
+		} else if (file_info[i].or_file_dir == 'f'){
+			// is file
+			printf("THIS IS FILE.\n");
+			//TcpFileTrans(sd, file_info[i].path, file_offset);
+			UdpFileTrans(sd, sin, add_len, argv[2]);
+
+		} else{
+			// ERROR
+			printf("access %s: No such file or directory\n", argv[2]);
+			exit(1);
+		}
+	}
+
+	gettimeofday(&start_point, NULL);
+/*
 	// is directory
 	if (S_ISDIR(sbuf.st_mode)){
 		printf("THIS IS DIRECTORY.\n");
@@ -117,15 +171,15 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		// ERROR
 		printf("access %s: No such file or directory\n", argv[2]);
 		exit(1);
-	}
-
+	}*/
+/*
 	gettimeofday(&end_point, NULL);
 
 	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
 	printf("총 시간 = %g\n", total_timer);
 	double total_size = FileTransferSize(argv[2]);
 	printf("평균 속도 = %g\n", total_size/total_timer);
-
+*/
 	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
 
 	CountDir(argv[2]);
@@ -185,6 +239,7 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 
 	// 저장해야되는 파일 경로 전송
 	sprintf(temp_file_name, "./save/%s", file_name);
+
 	if (sendto(sd, temp_file_name, SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
 		exit(1);
@@ -211,9 +266,25 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 			perror("sendto");
 			exit(1);
 		}
+
+
+	char tmp[10];
+	sprintf(tmp, "%d", n);
+		if (sendto(sd, tmp, 10,0,(struct sockaddr *)&sin, sizeof(sin)) == -1) {
+
+			perror("send");
+			exit(1);
+		}
+
+		memset(buf, 0x00, SIZEBUF);
+		printf("send clear\n");
 	}
 
-	memset(buf, 0, SIZEBUF);
+	memset(buf, '\0', SIZEBUF);
+
+
+
+	//memset(buf, 0, SIZEBUF);
 
 	// 파일전송이 끝났다고 알려줌.
 	if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
@@ -234,11 +305,13 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 		printf("END OF TRANSFER FILE ERROR\n");
 		exit(1);
 	}
+	close(fd);
+
 }
 
 // UDP 디렉토리 전송 하는 함수
 void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_name){
-
+/*
 	int bytes_read = 0;
 	int i = 0;
 
@@ -349,9 +422,9 @@ void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_na
 			chdir(cwd);
 		}
 	}
-
-}
 */
+}
+
 // TCP 클라이언트 부분
 void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	int i;
@@ -503,19 +576,19 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 	while ((n = read(fd, buf, SIZEBUF)) > 0){
 
 		printf("SEND FILE CONTENTS SIZE: %d\n", n);
-	
+
 		if (send(sd, buf, SIZEBUF, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
-		
+
 		char tmp[10];
 		sprintf(tmp, "%d", n);
 		if (send(sd, tmp, 10, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
-		
+
 		memset(buf, 0x00, SIZEBUF);
 		printf("send clear\n");
 	}
@@ -527,7 +600,7 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 		perror("send filename");
 		exit(1);
 	}
-	
+
 	// 파일전송에 끝났다는 답장 받음
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv end of file");
