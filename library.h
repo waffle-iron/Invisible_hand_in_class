@@ -39,6 +39,7 @@ long long FolderSize(char *dir_name, long long total_size);
 typedef struct _file_information{	//����ü
 
 	char path[SIZEBUF];
+	char final_path[SIZEBUF];
 	char or_file_dir;
 }file_information;
 

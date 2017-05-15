@@ -5,6 +5,7 @@ int count_Dir = 0;
 int count_File = 0;
 int indexA,offset;
 
+
 void initGrobal(){
 	fileCount = 1;
 	count_Dir = 0;
@@ -79,35 +80,39 @@ void FilePathCheck(int file_size){
 	//socklen_t clientlen = sizeof(cli);
 	int i;
 	
-    
+   
     for(i=0; i<file_size; i++){
 		//printf("file_size i : %d", i);
        // fflush(stdout);
         sprintf(temp_file_name,"./save/%s",file_info[i].path);
         //printf("temp file name : %s\n", temp_file_name);
-		
+		printf("file size = %s \n", temp_file_name);
+
         if(lstat(temp_file_name, &sbuf) >= 0){
 			//파일 읽는것 파일이 있을경우
 			indexA = i;
 			offset = FileLocatePointer(temp_file_name);
+			strcpy(file_info[i].final_path,temp_file_name);
 			//
 		}
 		else if(lstat(temp_file_name, &sbuf) < 0 && i == 0){
             indexA=0;
 			offset=0;
+			strcpy(file_info[i].final_path,temp_file_name);
 			break;
 		}
 		else {
 			//파일이 없을경우 // 그전 파일의 offset 을 구한다.
 			sprintf(temp_file_name,"./save/%s",file_info[i-1].path);
+			strcpy(file_info[i].final_path,temp_file_name);
 			offset = FileLocatePointer(temp_file_name);
 			indexA = i-1;
+			
 			break;
 		}
 
         
 	}
-
 
 	printf("index: %d  offset : %d\n", indexA, offset);
 	// 클라이언트에게 offset index 보낸다.
@@ -332,6 +337,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		exit(1);
 	}
 
+	
     FilePathCheck(files_size);
 
 	sprintf(buf, "%d", offset);
@@ -362,17 +368,17 @@ void TcpServer(int sd, struct sockaddr_in cli){
 
     for (i = indexA; i < fileCount; ++i){
 		printf("요청이 들어오기를 대기중입니다.~~\n");
-		printf("name %s   ,    %c\n", file_info[i].path,file_info[i].or_file_dir);
+		printf("name %s   ,    %c\n", file_info[i].final_path,file_info[i].or_file_dir);
 		int bytes_read = 0;
 		if(file_info[i].or_file_dir == 'd'){
-			mkdir(file_info[i].path, 0744);
+			mkdir(file_info[i].final_path, 0744);
 			continue;
-
+		
 		} else if(file_info[i].or_file_dir == 'f'){
 			int fd;
 
 			// 해당 파일을 연다
-			if ((fd = open(file_info[i].path, O_WRONLY | O_CREAT | O_APPEND, 0666)) == -1){
+			if ((fd = open(file_info[i].final_path, O_WRONLY | O_CREAT | O_APPEND, 0666)) == -1){
 				perror("file open fail");
 				exit(1);
 			}
@@ -387,7 +393,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 					exit(1);
 				}
 				printf("SEND FILE CONTENTS SIZE: %d\n", bytes_read);
-
+				printf("SEND FILE CONTENTS SIZE: %s\n", file_info[i].final_path);
 				// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
 				if (!strncmp(buf, "end of file", SIZEBUF)) {
 

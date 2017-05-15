@@ -48,12 +48,12 @@ int main(int argc, char** argv){
 		file_info = (file_information*)malloc(sizeof(file_information) * files_size);//동적할당
         printf("file_size : %d\n", files_size);
 
-		if ((recvfrom(sd, file_info, sizeof(file_information) * file_size, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
+		if ((recvfrom(sd, file_info, sizeof(file_information) * files_size, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom filecount");
 			exit(1);
 		}
 
-		if ((sendto(sd, "path array", sizeof(file_information) * file_size, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
+		if ((sendto(sd, "path array", sizeof(file_information) * files_size, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
 			perror("sendto path array");
 			exit(1);
 		}
