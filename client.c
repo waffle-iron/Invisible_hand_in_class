@@ -58,7 +58,8 @@ int main(int argc, char** argv){
 		exit(1);
 	}
 
-	double total_size = 655555;//FileTransferSize(argv[2]);
+	double total_size = FileTransferSize(argv[2]);
+
 	if(65535.0 < total_size){
 		strcpy(choose,"TCP");
 
@@ -72,6 +73,7 @@ int main(int argc, char** argv){
 	}
 	else if(65535.0 > total_size){
 		strcpy(choose,"UDP");
+
 		printf("socket UDP\n");
 		fflush(stdout);
 		// TCP/UDP인지 전송
@@ -100,7 +102,7 @@ int main(int argc, char** argv){
 
 	//choose 가 udp or tcp 인지 해서 server의 UdpServer() 또는 TcpServer()
 	if(!strcmp(choose, "UDP") || !strcmp(choose, "udp")){
-		//UdpClient(argc, argv, sd , sin);
+		UdpClient(argc, argv, sd , sin);
 	}else if (!strcmp(choose, "TCP") || !strcmp(choose, "tcp")){
 		close(sd);
 

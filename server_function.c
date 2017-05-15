@@ -145,12 +145,12 @@ void UdpServer(int sd, struct sockaddr_in cli){
     FilePathCheck(files_size);
 
 	sprintf(buf, "%d", offset);
-    printf("%s\n",buf);
+    printf("offset %s\n",buf);
 
     if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("sendto offset");
 		exit(1);
-	}
+	} 
 
     if(recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, &clientlen) == -1){
 		perror("recv offset");
@@ -159,7 +159,7 @@ void UdpServer(int sd, struct sockaddr_in cli){
 
 	sprintf(buf, "%d", indexA);
 
-    printf("%s\n",buf);
+    printf("index %s\n",buf);
     if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
 		perror("sendto index");
 		exit(1);
@@ -436,6 +436,9 @@ void TcpServer(int sd, struct sockaddr_in cli){
 	int flag = 1;
 	//int file_flag = 1; // 1 파일 0  폴
 	// save 디렉토리 안에 저장하기 위해 작성
+
+
+
 	mkdir("save", 0744);
 
 	if (listen(sd, 5)) {

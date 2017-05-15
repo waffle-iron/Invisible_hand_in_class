@@ -22,7 +22,7 @@
 
 void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin);
 void UdpServer(int sd, struct sockaddr_in cli);
-void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name);
+void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name, int file_offset);
 void UdpDirTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* dir_name);
 
 void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin);

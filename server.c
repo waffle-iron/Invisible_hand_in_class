@@ -80,12 +80,12 @@ int main(int argc, char** argv){
 		}
 
 		if ( !strcmp(buf, "UDP") || !strcmp(buf, "udp")){
-			printf("udp");
+			printf("udp\n");
 			UdpServer(sd, cli);
 
 		}else if ( !strcmp(buf, "TCP") || !strcmp(buf, "tcp")){
 			close(sd);
-			printf("tcp");
+			printf("tcp\n");
 
 			if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 				perror("socket");

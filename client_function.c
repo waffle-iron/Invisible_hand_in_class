@@ -3,6 +3,11 @@
 int fileCount = 1;
 int count_Dir = 0;
 int count_File = 0;
+typedef struct file_name{	//����ü
+
+	struct dirent dent;
+	char or_file_dir;
+	}FName;
 
 int compare_file_name(const void* f_a, const void* f_b){
 
@@ -103,11 +108,14 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	int file_start_number;
 	int file_offset;
 
-
+	//시간 측정 시작
+	gettimeofday(&start_point, NULL);
 
 	socklen_t add_len = sizeof(struct sockaddr);
 	stat(argv[2], &sbuf);
 
+	printf("UDP START\n");
+	fflush(stdout);
 
 	// 해당 파일의 오프셋 받음
 	if (recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&sin, &add_len) == -1){
@@ -116,6 +124,7 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 	}
 	file_offset = atoi(buf);
 
+	printf("offset output %d\n",file_offset);
 	// 오프셋을 잘받았다는 문자열 전송
 		if (sendto(sd, "Good!! offset", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 			perror("send offset");
@@ -143,12 +152,12 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		if (file_info[i].or_file_dir == 'd'){
 			printf("THIS IS TCP DIRECTORY.\n");
 			//TcpDirTrans(sd, file_info[i].path);
-			UdpDirTrans(sd, sin, add_len, argv[2]);
+			UdpDirTrans(sd, sin, add_len,  file_info[i].path);
 		} else if (file_info[i].or_file_dir == 'f'){
 			// is file
 			printf("THIS IS FILE.\n");
 			//TcpFileTrans(sd, file_info[i].path, file_offset);
-			UdpFileTrans(sd, sin, add_len, argv[2]);
+			UdpFileTrans(sd, sin, add_len, file_info[i].path, file_offset);
 
 		} else{
 			// ERROR
@@ -157,29 +166,15 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		}
 	}
 
-	gettimeofday(&start_point, NULL);
-/*
-	// is directory
-	if (S_ISDIR(sbuf.st_mode)){
-		printf("THIS IS DIRECTORY.\n");
-		UdpDirTrans(sd, sin, add_len, argv[2]);
-	} else if (S_ISREG(sbuf.st_mode)){
-		// is file
-		printf("THIS IS FILE.\n");
-		UdpFileTrans(sd, sin, add_len, argv[2]);
-	} else{
-		// ERROR
-		printf("access %s: No such file or directory\n", argv[2]);
-		exit(1);
-	}*/
-/*
+	
+	//시간 측정 끝
 	gettimeofday(&end_point, NULL);
-
+	//시간 계산
 	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
-	printf("총 시간 = %g\n", total_timer);
+	printf("총 시간 = %f\n", total_timer);
 	double total_size = FileTransferSize(argv[2]);
-	printf("평균 속도 = %g\n", total_size/total_timer);
-*/
+	printf("평균 속도 = %f\n", total_size/total_timer);
+
 	//무결성 검사를ㄹ 하라능 ㅋㅋㅋㅋㅋㅋㅋ
 
 	CountDir(argv[2]);
@@ -216,13 +211,13 @@ void UdpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 }
 
 // UDP 파일 전송하는 함수
-void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name){
+void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_name, int file_offset){
 
 	int fd, n;
 	int bytes_read;
 	char buf[SIZEBUF + 1];
 	char temp_file_name[SIZEBUF];
-
+/*
 	// 파일이라고 서버에게 알려줌
 	if (sendto(sd, "This is File", SIZEBUF, 0, (struct sockaddr*)&sin, sizeof(sin)) == -1){
 		perror("sendto filename");
@@ -250,7 +245,7 @@ void UdpFileTrans(int sd, struct sockaddr_in sin, socklen_t add_len, char* file_
 		perror("recvfrom filename");
 		exit(1);
 	}
-
+*/
 	//파일 열기
 	if ((fd = open(file_name, O_RDONLY)) == -1){
 		perror("file open fail");
@@ -486,13 +481,15 @@ void TcpClient(int argc, char** argv, int sd, struct sockaddr_in sin){
 		}
 	}
 
+//시간 측정 끝
 	gettimeofday(&end_point, NULL);
-
-	/*double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
+	//시간 계산
+	double total_timer = FileTransferTimer(start_point.tv_sec, start_point.tv_usec, end_point.tv_sec, end_point.tv_usec);
 	printf("총 시간 = %g\n", total_timer);
 	double total_size = FileTransferSize(argv[2]);
 	printf("평균 속도 = %g\n", total_size/total_timer);
-*/
+
+
 	//무결성 검사하기
 	CountDir(argv[2]);
 
@@ -736,7 +733,7 @@ void TcpDirTrans(int sd, char* dir_name){
 	}
 */
 }
-/*
+
 double FileTransferTimer(long start_tv_sec, long start_tv_usec, long end_tv_sec, long end_tv_usec){
 
 	return (double)(end_tv_sec)+(double)(end_tv_usec) / 1000000.0 - (double)(start_tv_sec)-(double)(start_tv_usec) / 1000000.0;
@@ -781,6 +778,7 @@ long long FolderSize(char *dir_name, long long total_size){
 	char temp_dir_name[SIZEBUF];
 	char *cwd;
 	struct stat sbuf;
+	
 
 	memset(buf, 0, sizeof(buf));
 	if ((dp = opendir(dir_name)) == NULL){
@@ -789,12 +787,12 @@ long long FolderSize(char *dir_name, long long total_size){
 	}
 
 	memset(buf, 0, SIZEBUF);
-	file_information* files = (file_information*)malloc(sizeof(file_information) * files_number);
+	FName* files = (FName*)malloc(sizeof(FName) * files_number);
 
 	while ((dent = readdir(dp))){
 		if (index >= files_number - 2){
 			files_number *= 2;
-			files = (file_information *)realloc((void *)files, sizeof(file_information) * files_number);
+			files = (FName *)realloc((void *)files, sizeof(FName) * files_number);
 		}
 		if (strcmp(dent->d_name, ".") == 0){
 			continue;
@@ -832,4 +830,4 @@ long long FolderSize(char *dir_name, long long total_size){
 	}
 	return total_size;
 }
-*/
+
