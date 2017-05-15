@@ -72,7 +72,8 @@ void CountFile(const char* name){
 		}
 	}
 }
-
+// save 패스를 붙이고, 
+// 인덱스와 오프셋를 구함 
 void FilePathCheck(int file_size){
 	//클라언트 array 받고 , 내꺼 파일이랑 비교
 	struct stat sbuf;
@@ -85,87 +86,46 @@ void FilePathCheck(int file_size){
 		//printf("file_size i : %d", i);
        // fflush(stdout);
         sprintf(temp_file_name,"./save/%s",file_info[i].path);
-        //printf("temp file name : %s\n", temp_file_name);
-		printf("file size = %s \n", temp_file_name);
-
+        printf("temp file name : %s\n", temp_file_name);
+		printf("\nfile size = %s \n", temp_file_name);
+		
         if(lstat(temp_file_name, &sbuf) >= 0){
 			//파일 읽는것 파일이 있을경우
 			indexA = i;
 			offset = FileLocatePointer(temp_file_name);
-			strcpy(file_info[i].final_path,temp_file_name);
-			//
-		}
-		else if(lstat(temp_file_name, &sbuf) < 0 && i == 0){
-            indexA=0;
-			offset=0;
-			strcpy(file_info[i].final_path,temp_file_name);
-			break;
-		}
-		else {
+		} else {
 			//파일이 없을경우 // 그전 파일의 offset 을 구한다.
-			sprintf(temp_file_name,"./save/%s",file_info[i-1].path);
-			strcpy(file_info[i].final_path,temp_file_name);
-			offset = FileLocatePointer(temp_file_name);
-			indexA = i-1;
-			
-			break;
+			if( i == 0 ){
+				//첫번쨰 인경우
+				indexA=0;
+				offset=0;
+				break;
+			}else{
+				//첫번째가 아닌경우
+				sprintf(temp_file_name,"./save/%s",file_info[i-1].path);
+				indexA = i-1;
+				offset = FileLocatePointer(temp_file_name);
+				break;
+			}
 		}
-
-        
 	}
 
+	for (i = 0; i < fileCount; ++i){
+		sprintf(temp_file_name,"./save/%s",file_info[i].path);
+		strcpy(file_info[i].final_path,temp_file_name);
+	}
 	printf("index: %d  offset : %d\n", indexA, offset);
-	// 클라이언트에게 offset index 보낸다.
-/*
-    char buf[SIZEBUF];
-	sprintf(buf, "%s", offset);
-	if ((sendto(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
-		perror("sendto offset");
-		exit(1);
-	}
-
-	if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
-		perror("recv offset");
-		exit(1);
-	}
-
-	sprintf(buf, "%s", index);
-
-	if ((sendto(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
-		perror("sendto index");
-		exit(1);
-	}
-
-	if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
-		perror("recv index");
-		exit(1);
-	}
-*/
-
-	//파일 끝의 내용을 받는다 클라이언트 부분에서 마지막 파일 완전한지 체크하고 메세지를 전송받는다
-/*
-	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
-		perror("last file");
-		exit(1);
-	}
-
-	//메세지 체크
-	if (!strncmp(buf, "last file check", SIZEBUF)){
-
-	}
-*/
 }
 
-
+// 파일 offset 구하기
 int FileLocatePointer(char *file){
 	int fileEnd=0;
 
-
 	int fd = open(file, O_RDONLY | O_CREAT | O_APPEND);
-	fileEnd=lseek(fd, (off_t)0, SEEK_END);
+	fileEnd = lseek(fd, (off_t)0, SEEK_END);
 	close(fd);
 
-	return fileEnd;
+	return fileEnd ==0? fileEnd: fileEnd-1;
 }
 
 
@@ -366,9 +326,15 @@ void TcpServer(int sd, struct sockaddr_in cli){
 		exit(1);
 	}
 
+	for (i = 0; i < fileCount; ++i){
+		printf("index =  %s   ,file or dir=   %c\n", file_info[i].final_path,file_info[i].or_file_dir);
+
+	}
+	printf("\n");
     for (i = indexA; i < fileCount; ++i){
+		printf("i = %d \n",i);
 		printf("요청이 들어오기를 대기중입니다.~~\n");
-		printf("name %s   ,    %c\n", file_info[i].final_path,file_info[i].or_file_dir);
+		printf("name %s   ,file or dir=   %c\n", file_info[i].final_path,file_info[i].or_file_dir);
 		int bytes_read = 0;
 		if(file_info[i].or_file_dir == 'd'){
 			mkdir(file_info[i].final_path, 0744);
@@ -382,22 +348,26 @@ void TcpServer(int sd, struct sockaddr_in cli){
 				perror("file open fail");
 				exit(1);
 			}
+
 			// 파일 내용 받음
 			while (1) {
-
-				memset(buf, 0, sizeof(buf));
-
+				int n=0;
+				int bytes_read=0;
+				char tmp[10];
+				memset(buf, 0x00, SIZEBUF);
 				// 파일 내용 받음
-				if (recv(ns, buf, SIZEBUF, MSG_WAITALL) == -1){
+				
+				if ( (bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL)) == -1){
 					perror("recv file contests");
 					exit(1);
 				}
-				printf("SEND FILE CONTENTS SIZE: %d\n", bytes_read);
-				printf("SEND FILE CONTENTS SIZE: %s\n", file_info[i].final_path);
+					
+				//printf("SEND FILE CONTENTS : %s\n", buf);
 				// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
-				if (!strncmp(buf, "end of file", SIZEBUF)) {
+				if (!strncmp(buf, "end of file", SIZEBUF)){
 
 					// 거기에 대한 답장
+
 					if (send(ns, "end of file", SIZEBUF, 0) == -1){
 						perror("send end of file");
 						exit(1);
@@ -407,10 +377,21 @@ void TcpServer(int sd, struct sockaddr_in cli){
 					close(fd);
 
 					break; // while문 탈출
-				}else {
+				}
+				
+				else {
+					
 					// 끝이 아닌 경우 파일 내용 파일에 작성
+					
+					if ( recv(ns, tmp,10, 0 ) == -1){
+					perror("recv file contests");
+					exit(1);
+					}
+					n = atoi(tmp);
+					
+					printf("SEND FILE CONTENTS SIZE: %d\n", n);
 					printf("파일내용 적어요\n");
-                    write(fd, buf, SIZEBUF);
+                    write(fd, buf, n);
 				}
 			}
 		}

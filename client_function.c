@@ -497,28 +497,37 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 		perror("file open fail");
 		exit(1);
 	}
-	//lseek(fd, file_offset, SEEK_SET);
-
+	lseek(fd, file_offset, SEEK_SET);
+		memset(buf, '\0', SIZEBUF);
 	// 파일 내용을 전송
 	while ((n = read(fd, buf, SIZEBUF)) > 0){
 
 		printf("SEND FILE CONTENTS SIZE: %d\n", n);
-
+	
 		if (send(sd, buf, SIZEBUF, 0) == -1) {
 			perror("send");
 			exit(1);
 		}
+		
+		char tmp[10];
+		sprintf(tmp, "%d", n);
+		if (send(sd, tmp, 10, 0) == -1) {
+			perror("send");
+			exit(1);
+		}
+		
+		memset(buf, 0x00, SIZEBUF);
 		printf("send clear\n");
 	}
 
-	memset(buf, 0, SIZEBUF);
+	memset(buf, '\0', SIZEBUF);
 
 	// 파일전송이 끝났다고 알려줌.
 	if (send(sd, "end of file", SIZEBUF, 0) == -1){
 		perror("send filename");
 		exit(1);
 	}
-
+	
 	// 파일전송에 끝났다는 답장 받음
 	if (recv(sd, buf, SIZEBUF, MSG_WAITALL) == -1){
 		perror("recv end of file");
