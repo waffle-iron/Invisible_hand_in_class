@@ -131,7 +131,157 @@ int FileLocatePointer(char *file){
 
 ////UDP 서버부분
 void UdpServer(int sd, struct sockaddr_in cli){
+	int i = 0;
+	char buf[SIZEBUF];
+	socklen_t clientlen = sizeof(cli);
 
+	char check[SIZEBUF];
+	int flag = 1;
+
+
+	
+	mkdir("save", 0744);
+
+    FilePathCheck(files_size);
+
+	sprintf(buf, "%d", offset);
+    printf("%s\n",buf);
+
+    if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
+		perror("sendto offset");
+		exit(1);
+	}
+
+    if(recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, &clientlen) == -1){
+		perror("recv offset");
+		exit(1);
+	}
+
+	sprintf(buf, "%d", indexA);
+
+    printf("%s\n",buf);
+    if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
+		perror("sendto index");
+		exit(1);
+	}
+
+    if(recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, &clientlen) == -1){
+		perror("recv index");
+		exit(1);
+	}
+
+	for (i = 0; i < fileCount; ++i){
+		printf("index =  %s   ,file or dir=   %c\n", file_info[i].final_path,file_info[i].or_file_dir);
+
+	}
+	printf("\n");
+    for (i = indexA; i < fileCount; ++i){
+		printf("i = %d \n",i);
+		printf("요청이 들어오기를 대기중입니다.~~\n");
+		printf("name %s   ,file or dir=   %c\n", file_info[i].final_path,file_info[i].or_file_dir);
+		int bytes_read = 0;
+		if(file_info[i].or_file_dir == 'd'){
+			mkdir(file_info[i].final_path, 0744);
+			continue;
+		
+		} else if(file_info[i].or_file_dir == 'f'){
+			int fd;
+
+			// 해당 파일을 연다
+			if ((fd = open(file_info[i].final_path, O_WRONLY | O_CREAT | O_APPEND, 0666)) == -1){
+				perror("file open fail");
+				exit(1);
+			}
+
+			// 파일 내용 받음
+			while (1) {
+				int n=0;
+				int bytes_read=0;
+				char tmp[10];
+				memset(buf, 0x00, SIZEBUF);
+				// 파일 내용 받음
+				
+				if ( (bytes_read = recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, &clientlen)) == -1){
+					perror("recv file contests");
+					exit(1);
+				}
+					
+				//printf("SEND FILE CONTENTS : %s\n", buf);
+				// 만약 받은 문자열이 end of file (즉, 파일의 전송이 끝남을 알릴경우)
+				if (!strncmp(buf, "end of file", SIZEBUF)){
+
+					// 거기에 대한 답장
+
+					if (sendto(sd, "end of file", SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
+						perror("send end of file");
+						exit(1);
+					}
+
+					printf(" *****  END OF TRANSFER FILE  *****  \n");
+					close(fd);
+
+					break; // while문 탈출
+				}
+				
+				else {
+					
+					// 끝이 아닌 경우 파일 내용 파일에 작성
+					
+					
+					if(recvfrom(sd, tmp, 10, 0, (struct sockaddr*)&cli, &clientlen) == -1){
+					perror("recv file contests");
+					exit(1);
+					}
+					n = atoi(tmp);
+					
+					printf("SEND FILE CONTENTS SIZE: %d\n", n);
+					printf("파일내용 적어요\n");
+                    write(fd, buf, n);
+				}
+			}
+		}
+    }
+    CountFile(file_info[0].path);
+    CountDir(file_info[0].path);
+
+    // 파일 개수 전송
+    if(recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, &clientlen) == -1){
+	    perror("file count recieve");
+    	exit(1);
+    }
+    sprintf(check, "file_cnt = %d", count_File);
+    if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
+	    perror("file count send");
+	    exit(1);
+    }
+    printf("check = %s\n", check);
+    if (strcmp(buf, check) != 0){
+	    flag = 0;
+    }   
+
+    // 폴더 개수 전송
+    if(recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, &clientlen) == -1){
+	    perror("dir count recieve");
+	    exit(1);
+    }
+    sprintf(check,"dir_cnt = %d", count_Dir);
+	if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
+	    perror("dir count send");
+    	exit(1);
+    }
+    printf("check = %s\n", check);
+    if (strcmp(buf, check) != 0){
+    	flag = 0;
+    }
+
+    flag? sprintf(buf,"True"): sprintf(buf,"False");
+
+    //확인
+    if (sendto(sd, buf, SIZEBUF, 0, (struct sockaddr*)&cli, sizeof(cli)) == -1){
+    	perror("무결성 체크");
+    	exit(1);
+    }
+	/*
 	int i = 0;
 	char buf[SIZEBUF];
 	socklen_t clientlen = sizeof(cli);
@@ -274,12 +424,14 @@ void UdpServer(int sd, struct sockaddr_in cli){
 	}
 }
 
+*/
+}
 void TcpServer(int sd, struct sockaddr_in cli){
 	int ns;
 	int i = 0;
 	char buf[SIZEBUF];
 	socklen_t clientlen = sizeof(cli);
-	char path[SIZEBUF];
+
 	char check[SIZEBUF];
 	int flag = 1;
 	//int file_flag = 1; // 1 파일 0  폴
@@ -437,5 +589,6 @@ void TcpServer(int sd, struct sockaddr_in cli){
     	exit(1);
     }
     close(ns);
+	
 }
 
