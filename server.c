@@ -5,7 +5,8 @@ int main(int argc, char** argv){
 	struct sockaddr_in sin, cli;
 	int sd;
 	int reuse = 1;
-	socklen_t clientlen = sizeof(cli);
+
+    socklen_t clientlen = sizeof(cli);
 
 	while (1) {
 		printf("server FIRST ~\n");
@@ -13,29 +14,29 @@ int main(int argc, char** argv){
 			perror("socket");
 			exit(1);
 		}
- 
+
 		memset((char *)&sin, '\0', sizeof(sin));
 		sin.sin_family = AF_INET;
 		sin.sin_port = htons(PORTNUM);
 		sin.sin_addr.s_addr = htonl(INADDR_ANY);
- 
+
 		if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0){
 			perror("setsockopt(SO_REUSEADDR) failed");
 		}
-			
+
 		if (bind(sd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 			perror("bind");
 			exit(1);
 		}
 
-
 		initGrobal();
-		//ÆÄÀÏ °¹¼ö Àü¼Û ¹Þ±â 
+		//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ±ï¿½
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
-			perror("recvfrom filecount");
+			perror("recvfrom filecount111");
 			exit(1);
 		}
-		
+	    files_size = atoi(buf);
+
 		SetFileCount(atoi(buf));
 		//printf("** From Client : %s\n", buf);
 		if ((sendto(sd, "File count", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
@@ -43,40 +44,59 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 
-		// TCP/UDPÀÎÁö Àü¼Û
+		//client ë¡œ ë¶€í„° file info arrayì„ í•œë‹¤
+		file_info = (file_information*)malloc(sizeof(file_information) * files_size);//ë™ì í• ë‹¹
+        printf("file_size : %d\n", files_size);
+
+		if ((recvfrom(sd, file_info, sizeof(file_information) * files_size, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
+			perror("recvfrom filecount");
+			exit(1);
+		}
+
+		if ((sendto(sd, "path array", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
+			perror("sendto path array");
+			exit(1);
+		}
+
+		// ////ì„œë²„ê°€ ê°€ì§€ê³  ìžˆëŠ” array ë§Œë“¤ê¸°
+		// file_info = (file_information*)malloc(sizeof(file_information) * file_size);//ë™ì í• ë‹¹
+		//
+
+		// TCP/UDPï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		if ((recvfrom(sd, buf, SIZEBUF, 0, (struct sockaddr *)&cli, &clientlen)) == -1) {
 			perror("recvfrom");
 			exit(1);
 		}
-		//printf("** From Client : %s\n", buf);
+        //printf("printfprintf : %s\n" , buf);
+
 		if ((sendto(sd, "Start", SIZEBUF, 0, (struct sockaddr *)&cli, sizeof(cli))) == -1) {
-			perror("sendto");
+			perror("sendto start");
 			exit(1);
 		}
-	
+
 		if (strcmp(buf, "UDP") != 0 && strcmp(buf, "udp") != 0&&
 			strcmp(buf, "TCP") != 0 && strcmp(buf, "tcp") != 0){
 			return 0;
 		}
-		
+
 		if ( !strcmp(buf, "UDP") || !strcmp(buf, "udp")){
-			printf("udp");
+			printf("udp\n");
 			UdpServer(sd, cli);
 
 		}else if ( !strcmp(buf, "TCP") || !strcmp(buf, "tcp")){
 			close(sd);
-			printf("tcp");
-			
+			printf("tcp\n");
+
 			if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 				perror("socket");
 				exit(1);
 			}
-			
+
 			memset((char *)&sin, '\0', sizeof(sin));
 			sin.sin_family = AF_INET;
 			sin.sin_port = htons(PORTNUM);
 			sin.sin_addr.s_addr = htonl(INADDR_ANY);
-			
+
 			if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0){
 				perror("setsockopt(SO_REUSEADDR) failed");
 			}
@@ -89,6 +109,8 @@ int main(int argc, char** argv){
 		}
 		close(sd);
 	}
+
+
 
 	return 0;
 }
