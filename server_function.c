@@ -511,7 +511,7 @@ void TcpServer(int sd, struct sockaddr_in cli){
 				char tmp[10];
 				memset(buf, 0x00, SIZEBUF);
 				// 파일 내용 받음
-				
+				sleep(200);
 				if ( (bytes_read = recv(ns, buf, SIZEBUF, MSG_WAITALL)) == -1){
 					perror("recv file contests");
 					exit(1);

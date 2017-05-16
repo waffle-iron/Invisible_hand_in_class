@@ -573,7 +573,6 @@ void TcpFileTrans(int sd, char* file_name, int file_offset){
 	while ((n = read(fd, buf, SIZEBUF)) > 0){
 
 		printf("SEND FILE CONTENTS SIZE: %d\n", n);
-
 		if (send(sd, buf, SIZEBUF, 0) == -1) {
 			perror("send");
 			exit(1);
