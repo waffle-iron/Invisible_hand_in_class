@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/loveljhs2/Invisible_hand_in_class.png?label=ready&title=Ready)](https://waffle.io/loveljhs2/Invisible_hand_in_class?utm_source=badge)
 # Invisible_hand_in_class
  소프트웨어 개발 프로젝트 8조
 ## Development Environment
